@@ -314,7 +314,7 @@ public class MatchServiceImp implements MatchService {
     }
 
     @Override
-    public Page<MatchApiDto> getRecentMatches(String puuid, int page) {
+    public Page<MatchApiDto> getRecentMatches(String puuid, int page, Integer queueId) {
         // 1. [추가] 실시간성 확보: 0페이지 조회 시 최신 5게임 ID를 체크하여 즉시 수집
         if (page == 0) {
             List<String> latestIds = getMatchIds(puuid, 5);
@@ -327,6 +327,13 @@ public class MatchServiceImp implements MatchService {
 
         // 2. DB 조회를 시도
         List<Participant> allParticipants = participantRepository.findByPaPuuid(puuid);
+
+        // [추가] 큐 ID 필터링
+        if (queueId != null && queueId != 0) {
+            allParticipants = allParticipants.stream()
+                .filter(p -> p.getGameInfo().getQueueId() != null && p.getGameInfo().getQueueId().equals(queueId))
+                .collect(Collectors.toList());
+        }
 
         // 3. DB에 데이터가 한 건도 없다면? 외부 API에서 가져오기 (초기 진입자용)
         if (allParticipants == null || allParticipants.isEmpty()) {

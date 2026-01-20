@@ -13,6 +13,8 @@ public interface MatchFetchQueueRepository
 
     boolean existsByMfqId(String mfqId);
 
+    java.util.Optional<MatchFetchQueue> findByMfqId(String mfqId);
+
     @Modifying
     @Query(value = """
         UPDATE match_fetch_queue mfq

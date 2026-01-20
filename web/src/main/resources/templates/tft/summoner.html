@@ -92,6 +92,35 @@
 				</div>
 			</aside>
 			<main class="col-span-9 space-y-6">
+				<!-- Game Mode Tabs -->
+				<div class="flex gap-2">
+					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1100)}"
+					   class="px-4 py-2 rounded text-sm font-bold transition-colors"
+					   th:classappend="${currentQueueId == 1100} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
+					   랭크
+					</a>
+					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1090)}"
+					   class="px-4 py-2 rounded text-sm font-bold transition-colors"
+					   th:classappend="${currentQueueId == 1090} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
+					   일반
+					</a>
+					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1160)}"
+					   class="px-4 py-2 rounded text-sm font-bold transition-colors"
+					   th:classappend="${currentQueueId == 1160} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
+					   더블업
+					</a>
+					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1110)}"
+					   class="px-4 py-2 rounded text-sm font-bold transition-colors"
+					   th:classappend="${currentQueueId == 1110} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
+					   초고속
+					</a>
+					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=0)}"
+					   class="px-4 py-2 rounded text-sm font-bold transition-colors"
+					   th:classappend="${currentQueueId == 0} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
+					   전체
+					</a>
+				</div>
+
 				<!-- Match Summary -->
 				<section class="bg-[#1c2127] rounded-lg p-6 grid grid-cols-12 gap-8 border border-gray-800">
 					<div class="col-span-5 border-r border-gray-800 pr-4">
@@ -287,7 +316,7 @@
 
 				<!-- 더 보기 버튼 -->
 				<div th:if="${hasNext or profile.collectedCount < profile.totalCount}" class="mt-6 flex justify-center pb-10">
-					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(page=${currentPage + 1})}"
+					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(page=${currentPage + 1}, queueId=${currentQueueId})}"
 					   class="bg-[#1c2127] hover:bg-[#2d353f] text-gray-300 font-bold py-3 px-10 rounded-lg border border-gray-800 transition-all">
 						<span th:text="${hasNext} ? '과거 전적 더 보기' : '전적 수집 대기 중 (' + ${profile.collectedCount} + '/' + ${profile.totalCount} + ')'"></span>
 					</a>

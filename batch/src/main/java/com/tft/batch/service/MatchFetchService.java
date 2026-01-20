@@ -151,7 +151,26 @@ public class MatchFetchService {
         log.info("Total matches found for {}: {}", queue.getMfqId(), allMatchIds.size());
         
         for (String matchId : allMatchIds) {
-            if (!gameInfoRepository.existsByGaId(matchId)) {
+            // 이미 수집된 게임이면 스킵
+            if (gameInfoRepository.existsByGaId(matchId)) {
+                continue;
+            }
+
+            // 큐에 이미 존재하는지 확인 (중복 방지 및 재시도 로직)
+            java.util.Optional<MatchFetchQueue> existingQueue = queueRepository.findByMfqId(matchId);
+            
+            if (existingQueue.isPresent()) {
+                MatchFetchQueue q = existingQueue.get();
+                // 이전에 실패했다면 다시 시도하도록 상태 리셋
+                if ("FAIL".equals(q.getMfqStatus())) {
+                    q.markReady(); // 상태를 READY로 변경
+                    q.setMfqUpdatedAt(java.time.LocalDateTime.now());
+                    queueRepository.save(q);
+                    log.info("Reset FAIL status to READY for MatchID={}", matchId);
+                }
+                // READY나 FETCHING 상태면 아무것도 안 함 (중복 적재 방지)
+            } else {
+                // 큐에도 없고 DB에도 없으면 신규 등록
                 queueRepository.save(MatchFetchQueue.builder()
                         .mfqId(matchId)
                         .mfqType("MATCH")

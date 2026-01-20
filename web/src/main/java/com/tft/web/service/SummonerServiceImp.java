@@ -41,7 +41,7 @@ public  class SummonerServiceImp implements SummonerService{
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public SummonerProfileDto getSummonerData(String server, String gameName, String tagLine) {
+    public SummonerProfileDto getSummonerData(String server, String gameName, String tagLine, Integer queueId) {
         // 1. Riot ID → Account (서버 임시 고정)
         RiotAccountDto account = getAccountByRiotId(gameName, tagLine);
         if (account == null) return null;
@@ -91,6 +91,13 @@ public  class SummonerServiceImp implements SummonerService{
 
             // 1. 전체 통계 계산 (DB 기반)
             List<Participant> allMatches = participantRepository.findByPaPuuid(puuid);
+
+            // [추가] 큐 ID 필터링 (전체인 경우 queueId가 null이거나 0일 수 있음)
+            if (queueId != null && queueId != 0) {
+                allMatches = allMatches.stream()
+                    .filter(p -> p.getGameInfo().getQueueId() != null && p.getGameInfo().getQueueId().equals(queueId))
+                    .collect(java.util.stream.Collectors.toList());
+            }
             
             if (!allMatches.isEmpty()) {
                 double totalPlacement = allMatches.stream().mapToInt(Participant::getPaPlacement).sum();

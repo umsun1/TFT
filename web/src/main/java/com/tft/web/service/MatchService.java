@@ -13,5 +13,5 @@ public interface MatchService {
 
     List<MatchApiDto> getMatchDetail(List<String> matchIds, String puuid);
 
-    public Page<MatchApiDto> getRecentMatches(String puuid, int page);
+    public Page<MatchApiDto> getRecentMatches(String puuid, int page, Integer queueId);
 }

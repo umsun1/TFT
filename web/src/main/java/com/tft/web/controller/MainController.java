@@ -50,18 +50,21 @@ public class MainController {
 
     @GetMapping("/summoner/{server}/{gameName}/{tagLine}")
 	public String getSummoner(@PathVariable String server, @PathVariable String gameName, @PathVariable String tagLine, 
-							  @RequestParam(defaultValue = "0") int page, Model model){
-		SummonerProfileDto profile = summonerService.getSummonerData(server, gameName, tagLine);
+							  @RequestParam(defaultValue = "0") int page,
+							  @RequestParam(defaultValue = "1100") int queueId,
+							  Model model){
+		SummonerProfileDto profile = summonerService.getSummonerData(server, gameName, tagLine, queueId);
 		
 		String puuid = profile.getPuuid();
 		
 		// 페이징 서비스 호출 (DB 기반 조회 및 초기 수집 포함)
-		Page<MatchApiDto> matchPage = matchService.getRecentMatches(puuid, page);
+		Page<MatchApiDto> matchPage = matchService.getRecentMatches(puuid, page, queueId);
 		
 		model.addAttribute("matches", matchPage.getContent());
 		model.addAttribute("profile", profile);
 		model.addAttribute("server", server);
 		model.addAttribute("currentPage", page);
+		model.addAttribute("currentQueueId", queueId);
 		model.addAttribute("hasNext", matchPage.hasNext());
 		model.addAttribute("totalMatches", matchPage.getTotalElements());
 
