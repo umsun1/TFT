@@ -11,7 +11,7 @@
 
 ## 🛠 사용 기술 (Tech Stack)
 
-### Backendㅁㅁ
+### Backend
 - **Framework:** Spring Boot 3.5.8 (Multi-module)
 - **Language:** Java 21 (Batch), Java 17 (Web)
 - **Data Access:** Spring Data JPA (도메인), MyBatis (통계/배치)
