@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "match_fetch_queue")
+@Table(name = "match_fetch_queue", indexes = @Index(name = "idx_mfq_status_priority", columnList = "mfq_status, mfq_priority DESC"))
 @Getter
 @Setter
 @NoArgsConstructor

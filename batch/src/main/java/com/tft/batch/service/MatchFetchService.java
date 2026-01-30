@@ -161,14 +161,26 @@ public class MatchFetchService {
             
             if (existingQueue.isPresent()) {
                 MatchFetchQueue q = existingQueue.get();
+                boolean changed = false;
+
+                // [추가] Priority Bump: 새 요청의 우선순위가 더 높으면 업데이트 (유저 조회 시 즉시 반영 위해)
+                int newPriority = queue.getMfqPriority() - 1;
+                if (q.getMfqPriority() < newPriority) {
+                    q.setMfqPriority(newPriority);
+                    changed = true;
+                }
+
                 // 이전에 실패했다면 다시 시도하도록 상태 리셋
                 if ("FAIL".equals(q.getMfqStatus())) {
                     q.markReady(); // 상태를 READY로 변경
                     q.setMfqUpdatedAt(java.time.LocalDateTime.now());
-                    queueRepository.save(q);
+                    changed = true;
                     log.info("Reset FAIL status to READY for MatchID={}", matchId);
                 }
-                // READY나 FETCHING 상태면 아무것도 안 함 (중복 적재 방지)
+                
+                if (changed) {
+                    queueRepository.save(q);
+                }
             } else {
                 // 큐에도 없고 DB에도 없으면 신규 등록
                 queueRepository.save(MatchFetchQueue.builder()

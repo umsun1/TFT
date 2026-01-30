@@ -53,7 +53,7 @@ public  class SummonerServiceImp implements SummonerService{
             com.tft.web.domain.MatchFetchQueue queue = existingQueue.get();
             if (!"FETCHING".equals(queue.getMfqStatus())) {
                 queue.setMfqStatus("READY");
-                queue.setMfqPriority(10);
+                queue.setMfqPriority(999);
                 queueRepository.save(queue);
             }
         } else {
@@ -61,7 +61,7 @@ public  class SummonerServiceImp implements SummonerService{
                     .mfqId(puuid)
                     .mfqType("SUMMONER")
                     .mfqStatus("READY")
-                    .mfqPriority(10)
+                    .mfqPriority(999)
                     .build());
         }
 
