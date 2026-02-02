@@ -15,7 +15,7 @@ public class MatchFetchScheduler {
 
     private final MatchFetchService matchFetchService;
 
-    @Scheduled(fixedDelay = 1200)
+    @Scheduled(fixedDelay = 2000)
     public void run() {
         log.info("match fetch scheduler start");
         matchFetchService.fetchNext();

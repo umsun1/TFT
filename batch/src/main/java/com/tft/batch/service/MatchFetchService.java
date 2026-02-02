@@ -137,60 +137,73 @@ public class MatchFetchService {
         int start = 0;
         long seasonStartEpoch = 1764687600L; // 2025년 12월 3일 기준
 
+        // 1. Riot API에서 매치 ID 리스트 수집
         while (true) {
-            // startTime 파라미터를 추가하여 시즌 시작일 이후 데이터만 타겟팅
             java.util.List<String> ids = riotMatchClient.fetchMatchIds(queue.getMfqId(), start, 100, seasonStartEpoch);
-            
             if (ids == null || ids.isEmpty()) break;
             allMatchIds.addAll(ids);
-            
-            if (ids.size() < 100) break; // 100개 미만이면 마지막 페이지
+            if (ids.size() < 100) break;
             start += 100;
         }
         
         log.info("Total matches found for {}: {}", queue.getMfqId(), allMatchIds.size());
         
+        if (allMatchIds.isEmpty()) return;
+
+        // 2. [Bulk Optimization] DB 조회를 한 번에 수행
+        // 이미 저장된 게임(GameInfo) 조회
+        java.util.List<String> existingGaIds = gameInfoRepository.findExistingGaIds(allMatchIds);
+        java.util.Set<String> finishedGameSet = new java.util.HashSet<>(existingGaIds);
+
+        // 큐에 있는 상태(MatchFetchQueue) 조회
+        java.util.List<MatchFetchQueue> existingQueues = queueRepository.findAllByMfqIdIn(allMatchIds);
+        java.util.Map<String, MatchFetchQueue> queueMap = existingQueues.stream()
+                .collect(java.util.stream.Collectors.toMap(MatchFetchQueue::getMfqId, q -> q, (q1, q2) -> q1));
+
+        java.util.List<MatchFetchQueue> toSave = new java.util.ArrayList<>();
+        int newPriority = queue.getMfqPriority() - 1;
+
+        // 3. 메모리 상에서 필터링 및 로직 처리
         for (String matchId : allMatchIds) {
             // 이미 수집된 게임이면 스킵
-            if (gameInfoRepository.existsByGaId(matchId)) {
+            if (finishedGameSet.contains(matchId)) {
                 continue;
             }
 
-            // 큐에 이미 존재하는지 확인 (중복 방지 및 재시도 로직)
-            java.util.Optional<MatchFetchQueue> existingQueue = queueRepository.findByMfqId(matchId);
-            
-            if (existingQueue.isPresent()) {
-                MatchFetchQueue q = existingQueue.get();
+            if (queueMap.containsKey(matchId)) {
+                // 이미 큐에 있는 경우: 상태/우선순위 업데이트
+                MatchFetchQueue q = queueMap.get(matchId);
                 boolean changed = false;
 
-                // [추가] Priority Bump: 새 요청의 우선순위가 더 높으면 업데이트 (유저 조회 시 즉시 반영 위해)
-                int newPriority = queue.getMfqPriority() - 1;
                 if (q.getMfqPriority() < newPriority) {
                     q.setMfqPriority(newPriority);
                     changed = true;
                 }
-
-                // 이전에 실패했다면 다시 시도하도록 상태 리셋
                 if ("FAIL".equals(q.getMfqStatus())) {
-                    q.markReady(); // 상태를 READY로 변경
+                    q.markReady();
                     q.setMfqUpdatedAt(java.time.LocalDateTime.now());
                     changed = true;
                     log.info("Reset FAIL status to READY for MatchID={}", matchId);
                 }
-                
                 if (changed) {
-                    queueRepository.save(q);
+                    toSave.add(q);
                 }
             } else {
-                // 큐에도 없고 DB에도 없으면 신규 등록
-                queueRepository.save(MatchFetchQueue.builder()
+                // 신규 등록
+                toSave.add(MatchFetchQueue.builder()
                         .mfqId(matchId)
                         .mfqType("MATCH")
                         .mfqStatus("READY")
-                        .mfqPriority(queue.getMfqPriority() - 1)
+                        .mfqPriority(newPriority)
                         .mfqUpdatedAt(java.time.LocalDateTime.now())
                         .build());
             }
+        }
+
+        // 4. [Bulk Insert] 변경사항 한 번에 저장
+        if (!toSave.isEmpty()) {
+            queueRepository.saveAll(toSave);
+            log.info("Queued {} matches for fetching.", toSave.size());
         }
     }
 

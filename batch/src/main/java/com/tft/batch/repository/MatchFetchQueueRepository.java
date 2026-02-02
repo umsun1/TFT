@@ -36,4 +36,6 @@ public interface MatchFetchQueueRepository
         ORDER BY mfq_updated_at ASC
         """, nativeQuery = true)
     java.util.List<MatchFetchQueue> findFetchingAll();
+
+    java.util.List<MatchFetchQueue> findAllByMfqIdIn(java.util.List<String> mfqIds);
 }
