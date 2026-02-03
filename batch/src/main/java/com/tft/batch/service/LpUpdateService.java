@@ -31,8 +31,7 @@ public class LpUpdateService {
         for (String puuid : activePuuids) {
             try {
                 processPuuid(puuid);
-                // Rate limit safety: 50ms delay
-                Thread.sleep(50);
+                // Thread.sleep removed for faster processing
             } catch (Exception e) {
                 log.error("Error updating LP for puuid: {}", puuid, e);
             }
@@ -40,28 +39,31 @@ public class LpUpdateService {
     }
 
     private void processPuuid(String puuid) {
+        // API 호출
         TftLeagueEntryDto league = riotLeagueClient.getTftLeagueByPuuid(puuid);
-
         if (league == null) return;
 
         LpHistory lastRecord = lpHistoryRepository.findTopByPuuidOrderByCreatedAtDesc(puuid);
 
         boolean needUpdate = false;
+        // DB 기록 없는 유저(신규 유저)인 경우 바로 저장
         if (lastRecord == null) {
             needUpdate = true;
-        } else {
-            // Check if LP or Tier changed
+        }
+        else {
+            // 이전 점수와 현재 점수 비교해서 변했을 때만 저장.
             if (lastRecord.getLp() != league.getLeaguePoints() || !lastRecord.getTier().equals(league.getTier())) {
                 needUpdate = true;
             }
         }
 
+        // 저장용 객체 만들어서 DB에 추가
         if (needUpdate) {
             LpHistory newHistory = LpHistory.builder()
                     .puuid(puuid)
-                    .tier(league.getTier())
-                    .rank_str(league.getRank())
-                    .lp(league.getLeaguePoints())
+                    .tier(league.getTier()) //CHALLENGER, ..., IRON
+                    .rank_str(league.getRank()) //I~IV
+                    .lp(league.getLeaguePoints()) // 0~
                     .createdAt(LocalDateTime.now())
                     .build();
             
