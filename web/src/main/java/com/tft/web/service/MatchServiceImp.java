@@ -63,6 +63,7 @@ public class MatchServiceImp implements MatchService {
         return getMatchIds(puuid, 20); // 기본적으로 최근 20개만 가져옴
     }
 
+    // API 호출하여 시즌 16 게임 중 puuid 소환사의 matchId를 count개 만큼 가져옴.
     public List<String> getMatchIds(String puuid, int count) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-Riot-Token", apiKey);
@@ -119,13 +120,14 @@ public class MatchServiceImp implements MatchService {
             Map<String, Object> body = response.getBody();
             if (body == null) return null;
 
+            // API에서 받은 원시 데이터 -> 자바 객체(DTO)
             MetadataDto metadata = objectMapper.convertValue(body.get("metadata"), MetadataDto.class);
             InfoDto info = objectMapper.convertValue(body.get("info"), InfoDto.class);
             info.setGame_mode(getGameModeName(info.getQueue_id()));
 
             // 이미 DB에 있는 매치인지 체크하고 저장하는 로직을 호출.
             saveMatchToDatabase(metadata, info);
-            
+            // 화면용 데이터로 가공 후 반환
             return processDtoForView(metadata, info, myPuuid);
 
         } catch (Exception e) {
@@ -287,6 +289,7 @@ public class MatchServiceImp implements MatchService {
         return match;
     }
 
+    // 게임모드 구분
     private String getGameModeName(int queueId) {
         return switch (queueId) {
             case 1090 -> "일반";
@@ -301,7 +304,7 @@ public class MatchServiceImp implements MatchService {
         };
     }
 
-    // 시너지 배경 URL을 결정하는 헬퍼 메서드
+    // 시너지 배경 URL을 결정
     private String getSynergyBgUrl(int style) {
         return switch (style) {
             case 1 -> "https://cdn.dak.gg/tft/images2/tft/traits/background/bronze.svg";
@@ -315,7 +318,7 @@ public class MatchServiceImp implements MatchService {
 
     @Override
     public Page<MatchApiDto> getRecentMatches(String puuid, int page, Integer queueId) {
-        // 1. [추가] 실시간성 확보: 0페이지 조회 시 최신 5게임 ID를 체크하여 즉시 수집
+        // 1. 실시간성 확보: 0페이지 조회 시 최신 5게임 ID를 체크하여 즉시 수집
         if (page == 0) {
             List<String> latestIds = getMatchIds(puuid, 5);
             for (String matchId : latestIds) {
@@ -328,15 +331,15 @@ public class MatchServiceImp implements MatchService {
         // 2. DB 조회를 시도
         List<Participant> allParticipants = participantRepository.findByPaPuuid(puuid);
 
-        // [추가] 큐 ID 필터링
+        // 큐 ID 필터링
         if (queueId != null && queueId != 0) {
             allParticipants = allParticipants.stream()
                 .filter(p -> p.getGameInfo().getQueueId() != null && p.getGameInfo().getQueueId().equals(queueId))
                 .collect(Collectors.toList());
         }
 
-        // 3. DB에 데이터가 한 건도 없다면? 외부 API에서 가져오기 (초기 진입자용)
-        if (allParticipants == null || allParticipants.isEmpty()) {
+        // 3. DB에 데이터가 20개보다 적으면(즉, 한 페이지가 안 나오면) 보충 (초기 진입자라도 1번 작업을 통해 5개는 저장되어있을것)
+        if (allParticipants == null || allParticipants.size() < 20) {
             System.out.println("DB에 데이터가 없습니다. 초기 데이터(20개) API 호출을 시작합니다...");
             
             // Match ID 리스트 가져오기 (최근 20개만 즉시 수집)
@@ -352,7 +355,7 @@ public class MatchServiceImp implements MatchService {
         allParticipants.sort((p1, p2) -> 
             p2.getGameInfo().getGaDatetime().compareTo(p1.getGameInfo().getGaDatetime()));
 
-        // 4. 페이징 처리 (이하 동일)
+        // 4. 페이징 처리
         int pageSize = 20;
         int start = page * pageSize;
         int end = Math.min((start + pageSize), allParticipants.size());
@@ -380,6 +383,7 @@ public class MatchServiceImp implements MatchService {
         game.setGaId(metadata.getMatch_id());
         long timestampMs = info.getGame_datetime();
 
+        // 밀리초 -> 한국 시간으로 변환
         LocalDateTime gameDateTime = Instant
                 .ofEpochMilli(timestampMs)
                 .atZone(ZoneId.of("Asia/Seoul"))
@@ -392,6 +396,7 @@ public class MatchServiceImp implements MatchService {
 
         // 3. 참가자들(Participants) 순회
         for (ParticipantDto pDto : info.getParticipants()) {
+            // 엔티티 생성후 DTO의 값 넣어줌 : DB 저장을 위한 작업 
             Participant p = new Participant();
             p.setPaPuuid(pDto.getPuuid());
             p.setPaPlacement(pDto.getPlacement());

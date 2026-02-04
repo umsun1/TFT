@@ -47,7 +47,7 @@ public  class SummonerServiceImp implements SummonerService{
         if (account == null) return null;
         String puuid = account.getPuuid();
 
-        // [수정] 배치를 통한 데이터 수집 요청 (새로운 전적 확인을 위해 상태 갱신)
+        // 배치를 통한 데이터 수집 요청 (새로운 전적 확인을 위해 상태 갱신)
         java.util.Optional<com.tft.web.domain.MatchFetchQueue> existingQueue = queueRepository.findByMfqIdAndMfqType(puuid, "SUMMONER");
         if (existingQueue.isPresent()) {
             com.tft.web.domain.MatchFetchQueue queue = existingQueue.get();
@@ -241,6 +241,7 @@ public  class SummonerServiceImp implements SummonerService{
         return profile;
     }
 
+    // 그래프용 티어 점수 계산기
     private int convertTierToTotalLp(String tier, String rank, int lp) {
         if (tier == null) return 0;
         
@@ -278,6 +279,7 @@ public  class SummonerServiceImp implements SummonerService{
         return baseScore + rankScore + lp;
     }
 
+    // 닉네임 + 태그라인 -> PUUID
     public RiotAccountDto getAccountByRiotId(String gameName, String tagLine) {
         String url = "https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/"+ gameName + "/" + tagLine;
 
@@ -297,6 +299,7 @@ public  class SummonerServiceImp implements SummonerService{
         return response.getBody();
     }
 
+    // PUUID -> TFT 관련 프로필
     public TftLeagueEntryDto getTftLeagueByPuuid(String puuid) {
         String url = "https://kr.api.riotgames.com/tft/league/v1/by-puuid/" + puuid;
         HttpHeaders headers = new HttpHeaders();
@@ -320,6 +323,7 @@ public  class SummonerServiceImp implements SummonerService{
         return (results != null && !results.isEmpty()) ? results.get(0) : null;
     }
 
+    // PUUID -> 소환사 레벨, 아이콘
     public SummonerDto getTftSummonerByPuuid(String puuid){
         String url = "https://kr.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/" + puuid;
         HttpHeaders headers = new HttpHeaders();
@@ -338,6 +342,7 @@ public  class SummonerServiceImp implements SummonerService{
         return response.getBody();
     }
 
+    // 플레이어 평균 등수 계산
     public double getAveragePlacement(String puuid) {
         // 1. DB에서 이 유저의 시즌 16 참가 기록만 가져옴
         List<Participant> seasonMatches = participantRepository.findByPaPuuidAndGameInfo_GaDatetimeAfter(puuid, LocalDateTime.of(2025, 12, 3, 0, 0)); // 시즌 시작일 기준)
@@ -352,6 +357,7 @@ public  class SummonerServiceImp implements SummonerService{
         return (double) totalRank / seasonMatches.size();
     }
 
+    // 플레이어 승률(1등 확률) 계산
     public Map<String, Object> getWinStatistics(String puuid) {
         // 1. 시즌 전체 매치 기록 조회
         List<Participant> seasonMatches = participantRepository.findByPaPuuid(puuid); // 시즌 필터 포함된 쿼리 권장
