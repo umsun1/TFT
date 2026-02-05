@@ -364,6 +364,7 @@ public class MatchServiceImp implements MatchService {
             return new PageImpl<>(new ArrayList<>(), PageRequest.of(page, pageSize), allParticipants.size());
         }
 
+        // 
         List<MatchApiDto> pagedDtos = allParticipants.subList(start, end).stream()
                 .map(p -> convertEntityToDto(p.getGameInfo(), puuid)) 
                 .collect(Collectors.toList());
