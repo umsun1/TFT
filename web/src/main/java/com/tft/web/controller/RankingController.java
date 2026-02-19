@@ -2,6 +2,7 @@ package com.tft.web.controller;
 
 import com.tft.web.domain.LpHistory;
 import com.tft.web.domain.Participant;
+import com.tft.web.model.dto.ParticipantSimpleDto;
 import com.tft.web.model.dto.RankingDto;
 import com.tft.web.repository.LpHistoryRepository;
 import com.tft.web.repository.ParticipantRepository;
@@ -38,12 +39,12 @@ public class RankingController {
                 .collect(java.util.stream.Collectors.toList());
 
         // 3. 소환사 정보 일괄 조회 (N+1 문제 해결)
-        List<com.tft.web.model.dto.ParticipantSimpleDto> participants = participantRepository.findLatestParticipantsByPuuids(puuids);
+        List<ParticipantSimpleDto> participants = participantRepository.findLatestParticipantsByPuuids(puuids);
         
         // 4. 조회 속도를 위해 Map으로 변환
-        java.util.Map<String, com.tft.web.model.dto.ParticipantSimpleDto> pMap = participants.stream()
+        java.util.Map<String, ParticipantSimpleDto> pMap = participants.stream()
                 .collect(java.util.stream.Collectors.toMap(
-                        com.tft.web.model.dto.ParticipantSimpleDto::getPaPuuid, 
+                        ParticipantSimpleDto::getPaPuuid, 
                         p -> p, 
                         (p1, p2) -> p1 // 중복 발생 시 첫 번째 것 사용 (혹시 모를 대비)
                 ));
@@ -58,7 +59,7 @@ public class RankingController {
 
             // Map에서 정보 조회
             if (pMap.containsKey(h.getPuuid())) {
-                com.tft.web.model.dto.ParticipantSimpleDto p = pMap.get(h.getPuuid());
+                ParticipantSimpleDto p = pMap.get(h.getPuuid());
                 name = p.getPaName();
                 tag = p.getPaTag();
                 if (p.getPaCompanionId() != null) {
