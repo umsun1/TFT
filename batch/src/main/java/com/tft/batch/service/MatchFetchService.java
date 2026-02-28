@@ -3,6 +3,7 @@ package com.tft.batch.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 
 import com.tft.batch.client.RiotMatchClient;
 import com.tft.batch.client.RiotSummonerClient;
@@ -55,7 +56,7 @@ public class MatchFetchService {
                 processSummonerId(queue);
             }
             updateStatus(queue.getMfqNum(), "DONE");
-        } catch (org.springframework.web.client.HttpClientErrorException.TooManyRequests e) {
+        } catch (HttpClientErrorException.TooManyRequests e) {
             log.warn("Rate limit exceeded. Waiting based on Retry-After header...");
             
             String retryAfter = e.getResponseHeaders().getFirst("Retry-After");

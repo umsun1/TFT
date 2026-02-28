@@ -32,7 +32,7 @@ public  class TftStaticDataServiceImp implements TftStaticDataService{
     private Map<String, String> traitMap = new HashMap<>();
     private Map<String, String> traitNameMap = new HashMap<>();
     
-    private final String VERSION = "15.24.1";
+    private final String VERSION = "16.4.1";
 
     @PostConstruct
     public void init() {

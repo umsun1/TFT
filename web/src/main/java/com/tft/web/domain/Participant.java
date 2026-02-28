@@ -3,6 +3,8 @@ package com.tft.web.domain;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.BatchSize;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -54,9 +56,11 @@ public class Participant {
     private Integer paLevel;
 
     // 유닛과 시너지 연결
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Unit> units = new ArrayList<>();
 
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Trait> traits = new ArrayList<>();
 }

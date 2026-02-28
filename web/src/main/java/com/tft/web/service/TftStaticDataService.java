@@ -1,5 +1,9 @@
 package com.tft.web.service;
 
+import java.util.List;
+
+import com.tft.web.model.dto.ChampionDto;
+
 public interface TftStaticDataService {
     String getTacticianImgUrl(int itemId);
     String getUnitImgUrl(String characterId);
@@ -16,5 +20,5 @@ public interface TftStaticDataService {
     
     int getChampionCost(String name);
 
-    java.util.List<com.tft.web.model.dto.ChampionDto> getAllChampions();
+    List<ChampionDto> getAllChampions();
 }

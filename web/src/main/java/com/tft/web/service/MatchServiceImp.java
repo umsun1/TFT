@@ -43,6 +43,7 @@ import jakarta.transaction.Transactional;
 import com.tft.web.model.dto.TraitDto;
 
 @Service
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class MatchServiceImp implements MatchService {
 
     @Value("${riot.api.key}")
@@ -318,58 +319,23 @@ public class MatchServiceImp implements MatchService {
 
     @Override
     public Page<MatchApiDto> getRecentMatches(String puuid, int page, Integer queueId) {
-        // 1. 실시간성 확보: 0페이지 조회 시 최신 5게임 ID를 체크하여 즉시 수집
-        if (page == 0) {
-            List<String> latestIds = getMatchIds(puuid, 5);
-            for (String matchId : latestIds) {
-                if (!gameInfoRepository.existsByGaId(matchId)) {
-                    getSingleMatchDetail(matchId, puuid); // 내부에서 DB 저장 수행
-                }
-            }
-        }
-
-        // 2. DB 조회를 시도
-        List<Participant> allParticipants = participantRepository.findByPaPuuid(puuid);
-
-        // 큐 ID 필터링
-        if (queueId != null && queueId != 0) {
-            allParticipants = allParticipants.stream()
-                .filter(p -> p.getGameInfo().getQueueId() != null && p.getGameInfo().getQueueId().equals(queueId))
-                .collect(Collectors.toList());
-        }
-
-        // 3. DB에 데이터가 20개보다 적으면(즉, 한 페이지가 안 나오면) 보충 (초기 진입자라도 1번 작업을 통해 5개는 저장되어있을것)
-        if (allParticipants == null || allParticipants.size() < 20) {
-            System.out.println("DB에 데이터가 없습니다. 초기 데이터(20개) API 호출을 시작합니다...");
-            
-            // Match ID 리스트 가져오기 (최근 20개만 즉시 수집)
-            List<String> matchIds = getMatchIds(puuid, 20);
-            
-            if (!matchIds.isEmpty()) {
-                getMatchDetail(matchIds, puuid); 
-                allParticipants = participantRepository.findByPaPuuid(puuid);
-            }
-        }
-
-        // 3. 최신순 정렬
-        allParticipants.sort((p1, p2) -> 
-            p2.getGameInfo().getGaDatetime().compareTo(p1.getGameInfo().getGaDatetime()));
-
-        // 4. 페이징 처리
         int pageSize = 20;
-        int start = page * pageSize;
-        int end = Math.min((start + pageSize), allParticipants.size());
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(page, pageSize);
+        Page<Participant> participantPage;
 
-        if (start >= allParticipants.size()) {
-            return new PageImpl<>(new ArrayList<>(), PageRequest.of(page, pageSize), allParticipants.size());
+        // 1. DB 조회를 페이징 쿼리로 즉시 수행 (API 호출 제거)
+        if (queueId != null && queueId != 0) {
+            participantPage = participantRepository.findByPaPuuidAndGameInfo_QueueIdOrderByGameInfo_GaDatetimeDesc(puuid, queueId, pageable);
+        } else {
+            participantPage = participantRepository.findByPaPuuidOrderByGameInfoGaDatetimeDesc(puuid, pageable);
         }
 
-        // 
-        List<MatchApiDto> pagedDtos = allParticipants.subList(start, end).stream()
+        // 2. 엔티티를 DTO로 변환 (이미 @BatchSize에 의해 최적화된 지연 로딩 발생)
+        List<MatchApiDto> pagedDtos = participantPage.getContent().stream()
                 .map(p -> convertEntityToDto(p.getGameInfo(), puuid)) 
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(pagedDtos, PageRequest.of(page, pageSize), allParticipants.size());
+        return new PageImpl<>(pagedDtos, pageable, participantPage.getTotalElements());
     }
 
     @Transactional
