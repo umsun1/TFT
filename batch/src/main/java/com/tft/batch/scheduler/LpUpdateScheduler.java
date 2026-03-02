@@ -14,7 +14,7 @@ public class LpUpdateScheduler {
     private final LpUpdateService lpUpdateService;
 
     // Run every 1 minute
-    @Scheduled(fixedDelay = 60000)
+//    @Scheduled(fixedDelay = 60000)
     public void run() {
         log.info("Starting LP Update Scheduler...");
         lpUpdateService.updateActiveSummonersLp();
