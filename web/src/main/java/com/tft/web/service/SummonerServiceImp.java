@@ -71,16 +71,18 @@ public  class SummonerServiceImp implements SummonerService{
         }
         String puuid = account.getPuuid();
 
-        // [병렬 실행 시작] 리그 정보와 소환사 정보를 동시에 요청
+        // 병렬 처리 1 (소환사 리그 정보)
         CompletableFuture<TftLeagueEntryDto> leagueFuture = 
             CompletableFuture.supplyAsync(() -> {
+                // 캐시에 저장되어 있는지 확인
                 TftLeagueEntryDto cached = leagueCache.get(puuid);
                 if (cached != null) return cached;
+                // API 호출
                 TftLeagueEntryDto league = getTftLeagueByPuuid(puuid);
                 if (league != null) leagueCache.put(puuid, league);
                 return league;
             });
-        
+        // 병렬 처리 2 (소환사 레벨 및 아이콘)
         CompletableFuture<SummonerDto> summonerFuture = 
             CompletableFuture.supplyAsync(() -> getTftSummonerByPuuid(puuid));
 
