@@ -22,10 +22,9 @@
 
 
 ### 1. 비동기 데이터 수집 시스템
-- **상태 기반 작업 큐:** `MatchFetchQueue` 테이블을 통해 수집 작업의 상태(`READY` → `DONE` / `FAIL`)를 관리하여, 시스템 재시작 시에도 누락 없이 작업을 이어갈 수 있습니다.
+- **상태 기반 작업 큐:** `MatchFetchQueue` 테이블을 통해 수집 작업의 상태(`READY` → `FETCHING` → `DONE` / `FAIL`)를 관리하여, 시스템 재시작 시에도 누락 없이 작업을 이어갈 수 있습니다.
 - **중복 수집 방지**: MySQL의 'UPDATE-JOIN' 문을 활용해 작업 선택과 상태 변경을 단일 쿼리로 처리하는 원자적 작업 점유 로직을 구현하여 중복 수집을 차단했습니다.
 - **티어별 수집 전략:** 챌린저와 그랜드 마스터 티어 유저를 우선적으로 추적하여 데이터의 질을 높였습니다.
-
 
 ### 2. API 호출 제한 완벽 대응
 - **지능적 호출 제어:** 라이엇 API의 `Retry-After` 헤더를 분석하여, 429 에러(Too Many Requests) 발생 시 정확한 시간만큼 대기 후 자동으로 재시도합니다.
@@ -41,42 +40,58 @@
 ## 트러블슈팅
 
 ### 1. 외부 API의 Rate Limit 핸들링과 안정성 확보
-- **문제:** 단순 루프 방식으로 API를 호출할 경우, 초당/분당 제한에 걸려 다수의 요청이 실패하고 계정이 일시 차단되는 문제 발생.
+- **문제:** 단순 루프 방식으로 API를 호출할 경우, 초당/분당 제한에 걸려 다수의 요청이 실패하고 데이터 수집이 일시 중단되는 문제 발생.
 - **해결:**
-    - `MatchFetchService`에 **지능적 호출 제어** 로직을 구현했습니다. `HttpClientErrorException.TooManyRequests` 예외를 포착하여 API가 지시하는 대기 시간(Retry-After)을 준수하도록 스레드 제어(`Thread.sleep`)를 적용했습니다.
+    - `MatchFetchService`에 지능적 호출 제어 로직을 구현했습니다. `HttpClientErrorException.TooManyRequests` 예외를 포착하여 API가 지시하는 대기 시간(Retry-After)을 준수하도록 스레드 제어(`Thread.sleep`)를 적용했습니다.
     - 이를 통해 데이터 유실 없이 안정적인 수집 파이프라인을 구축했습니다.
 
-### 2. 랭킹 페이지 조회 속도 개선 (N+1 문제 해결)
-- **문제:** 상위 100명의 랭킹을 렌더링할 때, 각 유저의 상세 정보(아이콘, 닉네임 등)를 조회하기 위해 100번의 추가 SELECT 쿼리가 발생(N+1 문제).
+### 2. 멀티 모듈 아키텍처 설계
+- **문제:** 전적 조회 시 수백 건의 매치 데이터를 실시간으로 전부 수집할 경우 과도한 응답 대기 시간으로 인해 사용자 이탈이 발생하는 구조적 한계 존재.
 - **해결:**
-    - **데이터 일괄 조회:** `IN` 절을 활용하여 100명의 프로필 ID를 한 번의 쿼리로 조회(`findLatestParticipantsByPuuids`)했습니다.
-    - **메모리 내 데이터 구조화:** 조회된 리스트를 Java의 `Map<String, Dto>` 구조로 변환하여, 렌더링 시 O(1)의 속도로 매칭했습니다.
-    - **결과:** 페이지 로딩 시 DB 접근 횟수를 **101회 → 2회**로 획기적으로 줄여 응답 속도를 개선했습니다.
-
-### 3. 멀티 모듈 아키텍처 설계
-- **문제:** 웹 서비스(사용자 트래픽)와 데이터 수집기(배치 작업)가 하나의 프로젝트에 섞여 있어, 배치 작업의 부하가 웹 서비스 속도에 영향을 줌.
+    - **관심사의 분리:** 프로젝트를 사용자 응답을 담당하는 web 서버와 데이터 수집을 담당하는 batch 서버로 물리적으로 분리 했습니다.
+    - **비동기 수집 구조 설계:** 사용자에게는 즉각적인 확인이 필요한 최근 20게임 전적을 우선 응답하고, 나머지 매치 데이터는 DB 기반 작업 큐(MatchFetchQueue)에 등록하여 배치 서버가 백그라운드에서 스케줄러를 통해 순차적으로 수집하도록 설계했습니다.
+    - **결과:** 배치 서버에서 수만 건의 데이터를 처리하며 CPU를 점유해도, 웹 서버의 사용자 요청 처리에 영향을 주지 않는 독립적인 실행 환경을 구성했습니다.
+ 
+### 3. 전적 조회 성능 최적화 (N+1 문제 해결)
+- **문제:** 전적 조회 시 4단계(GameInfo-Participant-Unit-Item) 연관 데이터를 개별 호출하며 발생하는 N+1 문제와 다중 컬렉션 조인에 따른 카테시안 곱 현상으로 응답 속도 저하 문제 발생.
 - **해결:**
-    - **관심사의 분리:** 프로젝트를 `batch` 모듈과 `web` 모듈로 물리적으로 분리했습니다.
-    - **결과:** 배치 모듈이 수만 건의 데이터를 처리하며 CPU를 점유해도, 웹 모듈의 톰캣 스레드에는 영향을 주지 않는 독립적인 실행 환경을 구성했습니다.
+    - **로딩 최적화:** 다중 조인을 제거하고 `@BatchSize`를 적용하여 계층별로 흩어진 수백 건의 쿼리를 단 4회의 IN 쿼리로 최적화했습니다.
+    - **데이터 처리 최적화:** 어플리케이션 계층의 통계 연산을 DB 집계 함수로 이관하고 인덱스를 적용하여 데이터 가공 속도를 개선했습니다.
+    - **결과:** 응답 속도를 5.0s에서 0.6s로 약 88% 단축하여 대규모 데이터 환경에서도 안정적인 서비스 가용성 확보.
 
 ---
 
 ## 시스템 아키텍처
 
 ```mermaid
-graph TD
-    User[사용자] --> Web[Web Module: 조회 중심]
-    Web -- "수집 요청 등록" --> Queue[("Match Fetch Queue (DB)")]
-    
-    subgraph "Data Pipeline"
-        Scheduler[Spring Scheduler] --> Batch[Batch Module: 수집 전담]
-        Batch -- "작업 조회" --> Queue
-        Batch -- "REST API (Smart Retry-After)" --> Riot[Riot Games API]
-        Riot -- "Match Data" --> Batch
-        Batch -- "Match/LP 적재" --> DB[(MySQL)]
-    end
-    
-    DB -.-> Web
+graph LR
+    %% 스타일 정의
+    classDef client fill:#fff,stroke:#333,stroke-width:2px;
+    classDef server fill:#f0f7ff,stroke:#0055aa,stroke-width:2px;
+    classDef db fill:#fff9f0,stroke:#d4a017,stroke-width:2px;
+    classDef external fill:#fff,stroke:#555,stroke-width:2px,stroke-dasharray: 5 5;
+
+    %% 노드 설정 
+    Client[Client]:::client
+    Web["Web Server<br/>(Spring Boot)"]:::server
+    MySQL[("MySQL<br/>MatchFetchQueue<br/>(READY / FETCHING)")]:::db
+    Batch["Batch Server<br/>(Spring Scheduler)"]:::server
+    Riot["Riot API"]:::external
+
+    %% 1. 사용자 요청 흐름 
+    Client -- "Match History Request" --> Web
+
+    %% 2. Web Server와 DB 간 상호작용 
+    Web -- "Insert Match Fetch Job" --> MySQL
+    MySQL -- "Load Stored Match Data" --> Web
+
+    %% 3. Batch Server와 DB 간 상호작용 
+    MySQL -- "Fetch READY Job" --> Batch
+    Batch -- "Save Match Data" --> MySQL
+
+    %% 4. 외부 API 호출 구조 
+    Web -- "API Call (Profile)" --> Riot
+    Batch -- "API Call (Match)" --> Riot
 ```
 
 ---
