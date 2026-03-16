@@ -55,7 +55,7 @@ public class MatchFetchService {
             } else if ("SUMMONER_ID".equals(queue.getMfqType())) {
                 processSummonerId(queue);
             }
-            updateStatus(queue.getMfqNum(), "DONE");
+            updateStatus(queue.getMfqNum(), "DONE"); // FETCHING -> DONE
         } catch (HttpClientErrorException.TooManyRequests e) {
             log.warn("Rate limit exceeded. Waiting based on Retry-After header...");
             
