@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -24,7 +23,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.tft.web.domain.LpHistory;
-import com.tft.web.domain.MatchFetchQueue;
 import com.tft.web.domain.Participant;
 import com.tft.web.model.dto.RiotAccountDto;
 import com.tft.web.model.dto.SummonerDto;
@@ -32,7 +30,6 @@ import com.tft.web.model.dto.SummonerProfileDto;
 import com.tft.web.model.dto.SummonerStatsDto;
 import com.tft.web.model.dto.TftLeagueEntryDto;
 import com.tft.web.repository.LpHistoryRepository;
-import com.tft.web.repository.MatchFetchQueueRepository;
 import com.tft.web.repository.ParticipantRepository;
 
 @Service
@@ -50,7 +47,7 @@ public  class SummonerServiceImp implements SummonerService{
     private ParticipantRepository participantRepository;
 
     @Autowired
-    private MatchFetchQueueRepository queueRepository;
+    private RedisQueueService redisQueueService;
 
     @Autowired
     private LpHistoryRepository lpHistoryRepository;
@@ -149,22 +146,8 @@ public  class SummonerServiceImp implements SummonerService{
     }
 
     private void updateFetchQueue(String puuid) {
-        Optional<MatchFetchQueue> existingQueue = queueRepository.findByMfqIdAndMfqType(puuid, "SUMMONER");
-        if (existingQueue.isPresent()) {
-            MatchFetchQueue queue = existingQueue.get();
-            if (!"FETCHING".equals(queue.getMfqStatus())) {
-                queue.setMfqStatus("READY");
-                queue.setMfqPriority(999);
-                queueRepository.save(queue);
-            }
-        } else {
-            queueRepository.save(MatchFetchQueue.builder()
-                    .mfqId(puuid)
-                    .mfqType("SUMMONER")
-                    .mfqStatus("READY")
-                    .mfqPriority(999)
-                    .build());
-        }
+        // 기존 DB 조회 및 갱신 로직에서, Redis ZSet 삽입(혹은 갱신) 로직으로 대체 (O(logN))
+        redisQueueService.pushTask(puuid, "SUMMONER", 999);
     }
 
     private void saveLpHistory(String puuid, TftLeagueEntryDto league) {

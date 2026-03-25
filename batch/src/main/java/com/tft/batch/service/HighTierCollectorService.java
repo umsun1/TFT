@@ -3,8 +3,6 @@ package com.tft.batch.service;
 import com.tft.batch.client.RiotLeagueClient;
 import com.tft.batch.client.dto.TftLeagueItemDto;
 import com.tft.batch.client.dto.TftLeagueListDto;
-import com.tft.batch.model.entity.MatchFetchQueue;
-import com.tft.batch.repository.MatchFetchQueueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +17,7 @@ import java.util.List;
 public class HighTierCollectorService {
 
     private final RiotLeagueClient riotLeagueClient;
-    private final MatchFetchQueueRepository queueRepository;
+    private final RedisQueueService redisQueueService;
     private final com.tft.batch.repository.LpHistoryRepository lpHistoryRepository;
 
     @Transactional
@@ -64,16 +62,9 @@ public class HighTierCollectorService {
         for (TftLeagueItemDto entry : league.getEntries()) {
             // Case 1: PUUID가 있는 경우 (바로 랭킹 등록 및 매치 수집)
             if (entry.getPuuid() != null) {
-                if (!queueRepository.existsByMfqId(entry.getPuuid())) {
-                    queueRepository.save(MatchFetchQueue.builder()
-                            .mfqId(entry.getPuuid())
-                            .mfqType("SUMMONER")
-                            .mfqStatus("READY")
-                            .mfqPriority(priority)
-                            .mfqUpdatedAt(LocalDateTime.now())
-                            .build());
-                    count++;
-                }
+                redisQueueService.pushTask(entry.getPuuid(), "SUMMONER", priority);
+                count++;
+                
                 try {
                     saveLpHistory(entry, tierName);
                 } catch (Exception e) {
@@ -82,16 +73,8 @@ public class HighTierCollectorService {
             } 
             // Case 2: PUUID가 없고 SummonerID만 있는 경우 (ID 변환 대기열에 등록)
             else if (entry.getSummonerId() != null) {
-                if (!queueRepository.existsByMfqId(entry.getSummonerId())) {
-                    queueRepository.save(MatchFetchQueue.builder()
-                            .mfqId(entry.getSummonerId())
-                            .mfqType("SUMMONER_ID") // ID -> PUUID 변환 작업
-                            .mfqStatus("READY")
-                            .mfqPriority(priority)
-                            .mfqUpdatedAt(LocalDateTime.now())
-                            .build());
-                    count++;
-                }
+                redisQueueService.pushTask(entry.getSummonerId(), "SUMMONER_ID", priority);
+                count++;
             }
         }
         log.info("Added {} new players to queue from {}", count, tierName);

@@ -3,6 +3,7 @@
 **/application-*.properties
 **/application.yml
 **/application-*.yml
+**/.env
 
 # Java / Maven Build
 target/

@@ -9,9 +9,7 @@ import com.tft.batch.client.RiotMatchClient;
 import com.tft.batch.client.RiotSummonerClient;
 import com.tft.batch.client.dto.RiotMatchDetailResponse;
 import com.tft.batch.client.dto.TftSummonerDto;
-import com.tft.batch.model.entity.MatchFetchQueue;
 import com.tft.batch.repository.GameInfoRepository;
-import com.tft.batch.repository.MatchFetchQueueRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MatchFetchService {
 
-    private final MatchFetchQueueRepository queueRepository;
+    private final RedisQueueService redisQueueService;
     private final RiotMatchClient riotMatchClient;
     private final RiotSummonerClient riotSummonerClient;
     private final MatchDetailSaveService matchDetailSaveService;
@@ -33,37 +31,31 @@ public class MatchFetchService {
 
     @Transactional
     public void fetchNext() {
-        // 개발자 키의 한계를 고려하여 한 번에 1개씩만 처리
-        int pickedCount = queueRepository.pickNext();
-        if (pickedCount == 0) return;
+        // Redis 큐에서 우선순위가 가장 높은 작업 하나를 꺼냅니다.
+        RedisQueueService.QueueTask task = redisQueueService.popTask();
+        if (task == null) return;
 
-        java.util.List<MatchFetchQueue> tasks = queueRepository.findFetchingAll();
-        if (tasks.isEmpty()) return;
-
-        // 순차 처리로 변경 (Dev Key 안정성 확보)
-        for (MatchFetchQueue queue : tasks) {
-            processTask(queue);
-        }
+        processTask(task);
     }
 
-    private void processTask(MatchFetchQueue queue) {
+    private void processTask(RedisQueueService.QueueTask queue) {
         try {
-            if ("SUMMONER".equals(queue.getMfqType())) {
+            if ("SUMMONER".equals(queue.type)) {
                 processSummoner(queue);
-            } else if ("MATCH".equals(queue.getMfqType())) {
+            } else if ("MATCH".equals(queue.type)) {
                 processMatch(queue);
-            } else if ("SUMMONER_ID".equals(queue.getMfqType())) {
+            } else if ("SUMMONER_ID".equals(queue.type)) {
                 processSummonerId(queue);
             }
-            updateStatus(queue.getMfqNum(), "DONE"); // FETCHING -> DONE
+            // ZSet에서 이미 Pop 되었으므로 DONE 처리는 별도로 필요하지 않습니다.
         } catch (HttpClientErrorException.TooManyRequests e) {
             log.warn("Rate limit exceeded. Waiting based on Retry-After header...");
             
             String retryAfter = e.getResponseHeaders().getFirst("Retry-After");
             int waitSec = (retryAfter != null) ? Integer.parseInt(retryAfter) : 10;
             
-            // 상태를 READY로 되돌림 (나중에 다시 시도)
-            updateStatus(queue.getMfqNum(), "READY");
+            // 상태를 READY 대신 Redis 큐에 다시 밀어넣어 다음 순서에 시도하도록 합니다. (Re-queue)
+            redisQueueService.pushTask(queue.id, queue.type, queue.priority);
 
             try {
                 Thread.sleep((waitSec + 1) * 1000L);
@@ -71,37 +63,20 @@ public class MatchFetchService {
                 Thread.currentThread().interrupt();
             }
         } catch (Exception e) {
-            log.error("Error processing queue {}: {}", queue.getMfqId(), e.getMessage());
-            updateStatus(queue.getMfqNum(), "FAIL");
+            log.error("Error processing queue {}: {}", queue.id, e.getMessage());
+            // 에러 발생 시 버려지거나 데드레터 큐로 보냄 (현재는 로그만 남김)
         }
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updateStatus(Long mfqNum, String status) {
-        queueRepository.findById(mfqNum).ifPresent(q -> {
-            if ("DONE".equals(status)) q.markDone();
-            else if ("FAIL".equals(status)) q.markFail();
-            else if ("READY".equals(status)) q.markReady();
-        });
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void processSummonerId(MatchFetchQueue queue) {
-        log.info("Resolving SummonerID={} to PUUID", queue.getMfqId());
-        TftSummonerDto summoner = riotSummonerClient.getSummonerById(queue.getMfqId());
+    public void processSummonerId(RedisQueueService.QueueTask queue) {
+        log.info("Resolving SummonerID={} to PUUID", queue.id);
+        TftSummonerDto summoner = riotSummonerClient.getSummonerById(queue.id);
         if (summoner != null && summoner.getPuuid() != null) {
             String puuid = summoner.getPuuid();
             
-            // 1. 매치 수집 큐 등록
-            if (!queueRepository.existsByMfqId(puuid)) {
-                queueRepository.save(MatchFetchQueue.builder()
-                        .mfqId(puuid)
-                        .mfqType("SUMMONER")
-                        .mfqStatus("READY")
-                        .mfqPriority(queue.getMfqPriority())
-                        .mfqUpdatedAt(java.time.LocalDateTime.now())
-                        .build());
-            }
+            // 1. 매치 수집 큐 등록 (Redis ZSet 활용)
+            redisQueueService.pushTask(puuid, "SUMMONER", queue.priority);
 
             // 2. [추가] 랭킹 정보(LpHistory) 즉시 갱신
             // (SummonerID로 수집된 유저는 LpHistory가 없으므로 여기서 채워줘야 랭킹에 뜸)
@@ -131,8 +106,8 @@ public class MatchFetchService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void processSummoner(MatchFetchQueue queue) {
-        log.info("Fetching ALL match IDs for PUUID={} since Season Start (Dec 3)", queue.getMfqId());
+    public void processSummoner(RedisQueueService.QueueTask queue) {
+        log.info("Fetching ALL match IDs for PUUID={} since Season Start (Dec 3)", queue.id);
         
         java.util.List<String> allMatchIds = new java.util.ArrayList<>();
         int start = 0;
@@ -140,78 +115,43 @@ public class MatchFetchService {
 
         // 1. Riot API에서 매치 ID 리스트 수집
         while (true) {
-            java.util.List<String> ids = riotMatchClient.fetchMatchIds(queue.getMfqId(), start, 100, seasonStartEpoch);
+            java.util.List<String> ids = riotMatchClient.fetchMatchIds(queue.id, start, 100, seasonStartEpoch);
             if (ids == null || ids.isEmpty()) break;
             allMatchIds.addAll(ids);
             if (ids.size() < 100) break;
             start += 100;
         }
         
-        log.info("Total matches found for {}: {}", queue.getMfqId(), allMatchIds.size());
+        log.info("Total matches found for {}: {}", queue.id, allMatchIds.size());
         
         if (allMatchIds.isEmpty()) return;
 
-        // 2. [Bulk Optimization] DB 조회를 한 번에 수행
-        // 이미 저장된 게임(GameInfo) 조회
+        // 2. [Bulk Optimization] 이미 저장된 게임 조회
         java.util.List<String> existingGaIds = gameInfoRepository.findExistingGaIds(allMatchIds);
         java.util.Set<String> finishedGameSet = new java.util.HashSet<>(existingGaIds);
 
-        // 큐에 있는 상태(MatchFetchQueue) 조회
-        java.util.List<MatchFetchQueue> existingQueues = queueRepository.findAllByMfqIdIn(allMatchIds);
-        java.util.Map<String, MatchFetchQueue> queueMap = existingQueues.stream()
-                .collect(java.util.stream.Collectors.toMap(MatchFetchQueue::getMfqId, q -> q, (q1, q2) -> q1));
+        int newPriority = (int) queue.priority - 1;
+        int pushedCount = 0;
 
-        java.util.List<MatchFetchQueue> toSave = new java.util.ArrayList<>();
-        int newPriority = queue.getMfqPriority() - 1;
-
-        // 3. 메모리 상에서 필터링 및 로직 처리
+        // 3. 필터링 후 Redis 큐로 푸시
         for (String matchId : allMatchIds) {
             // 이미 수집된 게임이면 스킵
             if (finishedGameSet.contains(matchId)) {
                 continue;
             }
-
-            if (queueMap.containsKey(matchId)) {
-                // 이미 큐에 있는 경우: 상태/우선순위 업데이트
-                MatchFetchQueue q = queueMap.get(matchId);
-                boolean changed = false;
-
-                if (q.getMfqPriority() < newPriority) {
-                    q.setMfqPriority(newPriority);
-                    changed = true;
-                }
-                if ("FAIL".equals(q.getMfqStatus())) {
-                    q.markReady();
-                    q.setMfqUpdatedAt(java.time.LocalDateTime.now());
-                    changed = true;
-                    log.info("Reset FAIL status to READY for MatchID={}", matchId);
-                }
-                if (changed) {
-                    toSave.add(q);
-                }
-            } else {
-                // 신규 등록
-                toSave.add(MatchFetchQueue.builder()
-                        .mfqId(matchId)
-                        .mfqType("MATCH")
-                        .mfqStatus("READY")
-                        .mfqPriority(newPriority)
-                        .mfqUpdatedAt(java.time.LocalDateTime.now())
-                        .build());
-            }
+            redisQueueService.pushTask(matchId, "MATCH", newPriority);
+            pushedCount++;
         }
 
-        // 4. [Bulk Insert] 변경사항 한 번에 저장
-        if (!toSave.isEmpty()) {
-            queueRepository.saveAll(toSave);
-            log.info("Queued {} matches for fetching.", toSave.size());
+        if (pushedCount > 0) {
+            log.info("Queued {} matches for fetching.", pushedCount);
         }
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void processMatch(MatchFetchQueue queue) {
-        log.info("Fetching details for MatchID={}", queue.getMfqId());
-        RiotMatchDetailResponse response = riotMatchClient.fetchMatchDetail(queue.getMfqId());
+    public void processMatch(RedisQueueService.QueueTask queue) {
+        log.info("Fetching details for MatchID={}", queue.id);
+        RiotMatchDetailResponse response = riotMatchClient.fetchMatchDetail(queue.id);
         if (response != null) {
             matchDetailSaveService.save(response);
         }

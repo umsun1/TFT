@@ -5,14 +5,14 @@
 
 - **핵심 목표:** API 제한을 준수하는 무중단 데이터 수집 시스템 구축 및 빠른 전적 조회 서비스 제공
 - **개발 인원:** 1인 (개인 프로젝트)
-- **주요 특징:** 멀티 모듈(Batch/Web) 아키텍처, DB 기반 작업 큐
+- **주요 특징:** 멀티 모듈(Batch/Web) 아키텍처, Redis 인메모리 비동기 작업 큐
 
 ---
 
 ## 사용 기술
 
 - **Backend :** Java, Spring Boot, Spring Data JPA, Spring Scheduler
-- **Database :** MySQL
+- **Database / Cache :** MySQL, Redis
 - **Frontend :** Thymeleaf, JavaScript (ES6+), HTML5, CSS3
 - **External API :** Riot Games API (TFT)
 
@@ -21,14 +21,14 @@
 ## 핵심 기능 (Key Features)
 
 
-### 1. 비동기 데이터 수집 시스템
-- **상태 기반 작업 큐:** `MatchFetchQueue` 테이블을 통해 수집 작업의 상태(`READY` → `FETCHING` → `DONE` / `FAIL`)를 관리하여, 시스템 재시작 시에도 누락 없이 작업을 이어갈 수 있습니다.
-- **중복 수집 방지**: MySQL의 'UPDATE-JOIN' 문을 활용해 작업 선택과 상태 변경을 단일 쿼리로 처리하는 원자적 작업 점유 로직을 구현하여 중복 수집을 차단했습니다.
+### 1. 비동기 데이터 수집 시스템 (Redis ZSet Queue)
+- **인메모리 작업 큐:** 기존 RDBMS(MySQL) 테이블 기반의 큐에서 발생하는 폴링(Polling) 부하와 디스크 I/O 병목을 해결하기 위해 **Redis Sorted Set(ZSet)** 기반의 작업 큐를 도입했습니다.
+- **Lock-Free 우선순위 큐:** 고랭커(챌린저/그랜드마스터) 데이터나 즉시 조회가 필요한 유저 수집을 우선순위(Score)로 관리합니다. Redis의 O(logN) 정렬 특성과 싱글 스레드 원자적 연산(`popMax`)을 활용하여, 데드락(Lock) 경합 없이 번개처럼 빠른 속도로 작업을 분배합니다.
 - **티어별 수집 전략:** 챌린저와 그랜드 마스터 티어 유저를 우선적으로 추적하여 데이터의 질을 높였습니다.
 
 ### 2. API 호출 제한 완벽 대응
-- **지능적 호출 제어:** 라이엇 API의 `Retry-After` 헤더를 분석하여, 429 에러(Too Many Requests) 발생 시 정확한 시간만큼 대기 후 자동으로 재시도합니다.
-- **장애 복구 작업:** 일시적인 네트워크 오류나 API 장애 발생 시 해당 작업을 `READY` 상태로 되돌려 다음 배치 사이클에 다시 수행되도록 설계했습니다.
+- **지능적 호출 제어:** 라이엇 API의 `Retry-After` 헤더를 분석하여, 429 에러(Too Many Requests) 발생 시 정확한 대기 시간만큼 스케줄러를 대기시켜 API 정책을 준수합니다.
+- **Fail-Safe Re-queue:** 일시적인 네트워크 오류나 API 제한 발생 시, 해당 작업을 DB에 기록하는 대신 **Redis 큐에 다시 밀어넣는(Re-queue) 유연한 복구 로직**을 설계하여 데이터 유실 없는 무중단 수집 파이프라인을 완성했습니다.
 
 ### 3. 랭킹 및 전적 페이지
 - **실시간 리더보드:** Batch 서버에서 주기적으로 업데이트하는 LP를 기반으로 상위 랭커 순위를 실시간 제공합니다.
@@ -48,9 +48,9 @@
 ### 2. 멀티 모듈 아키텍처 설계
 - **문제:** 전적 조회 시 수백 건의 매치 데이터를 실시간으로 전부 수집할 경우 과도한 응답 대기 시간으로 인해 사용자 이탈이 발생하는 구조적 한계 존재.
 - **해결:**
-    - **관심사의 분리:** 프로젝트를 사용자 응답을 담당하는 web 서버와 데이터 수집을 담당하는 batch 서버로 물리적으로 분리 했습니다.
-    - **비동기 수집 구조 설계:** 사용자에게는 즉각적인 확인이 필요한 최근 20게임 전적을 우선 응답하고, 나머지 매치 데이터는 DB 기반 작업 큐(MatchFetchQueue)에 등록하여 배치 서버가 백그라운드에서 스케줄러를 통해 순차적으로 수집하도록 설계했습니다.
-    - **결과:** 배치 서버에서 수만 건의 데이터를 처리하며 CPU를 점유해도, 웹 서버의 사용자 요청 처리에 영향을 주지 않는 독립적인 실행 환경을 구성했습니다.
+    - **관심사의 분리:** 사용자 응답을 담당하는 Web 서버와 데이터 수집을 담당하는 Batch 서버로 물리적으로 분리했습니다.
+    - **초고속 통신망 (Redis):** 사용자에게는 즉각 확인이 필요한 최근 전적만 우선 응답하고, 나머지 매치 데이터는 **Redis ZSet 큐에 순식간에 Push** 합니다. 배치 서버는 스케줄러를 통해 Redis에서 가장 높은 우선순위 작업을 뽑아(Pop) 백그라운드에서 조용히 수집합니다.
+    - **결과:** 수만 건의 매치 데이터를 처리하는 동안에도, DB I/O나 Web 서버의 응답 속도에 전혀 타격을 주지 않는 완벽히 독립적이고 가벼운 분산 처리 환경을 완성했습니다.
  
 ### 3. 전적 조회 성능 최적화 (N+1 문제 해결)
 - **문제:** 전적 조회 시 4단계(GameInfo-Participant-Unit-Item) 연관 데이터를 개별 호출하며 발생하는 N+1 문제와 다중 컬렉션 조인에 따른 카테시안 곱 현상으로 응답 속도 저하 문제 발생.
@@ -74,24 +74,25 @@ graph LR
     %% 노드 설정 
     Client[Client]:::client
     Web["Web Server<br/>(Spring Boot)"]:::server
-    MySQL[("MySQL<br/>MatchFetchQueue<br/>(READY / FETCHING)")]:::db
+    Redis[("Redis<br/>ZSet InMemory Queue")]:::db
+    MySQL[("MySQL<br/>(Persistent Data)")]:::db
     Batch["Batch Server<br/>(Spring Scheduler)"]:::server
     Riot["Riot API"]:::external
 
     %% 1. 사용자 요청 흐름 
     Client -- "Match History Request" --> Web
 
-    %% 2. Web Server와 DB 간 상호작용 
-    Web -- "Insert Match Fetch Job" --> MySQL
-    MySQL -- "Load Stored Match Data" --> Web
+    %% 2. Web Server 데이터 흐름 
+    Web -- "[PUSH] Queue Task" --> Redis
+    MySQL -- "Load Match Data" --> Web
 
-    %% 3. Batch Server와 DB 간 상호작용 
-    MySQL -- "Fetch READY Job" --> Batch
-    Batch -- "Save Match Data" --> MySQL
+    %% 3. Batch Server 데이터 흐름 
+    Redis -- "[POP] Task by Priority" --> Batch
+    Batch -- "Save Detail Data" --> MySQL
 
     %% 4. 외부 API 호출 구조 
-    Web -- "API Call (Profile)" --> Riot
-    Batch -- "API Call (Match)" --> Riot
+    Web -- "API Call (Profile/League)" --> Riot
+    Batch -- "API Call (Match Detail)" --> Riot
 ```
 
 ---
