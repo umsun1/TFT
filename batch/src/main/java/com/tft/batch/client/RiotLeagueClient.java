@@ -83,4 +83,14 @@ public class RiotLeagueClient {
             return null;
         }
     }
+
+    public com.tft.batch.client.dto.TftSummonerDto getTftSummonerByPuuid(String puuid) {
+        String url = "https://kr.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/" + puuid + "?api_key=" + apiKey;
+        try {
+            return restTemplate.getForObject(url, com.tft.batch.client.dto.TftSummonerDto.class);
+        } catch (Exception e) {
+            log.error("Error fetching summoner for {}: {}", puuid, e.getMessage());
+            return null;
+        }
+    }
 }

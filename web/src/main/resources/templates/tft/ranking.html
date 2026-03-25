@@ -9,7 +9,7 @@
     <main layout:fragment="content" class="container mx-auto px-4 py-8">
         <div class="max-w-4xl mx-auto">
             <h1 class="text-3xl font-bold mb-2">랭킹 (Ranking)</h1>
-            <p class="text-gray-400 mb-8">실시간 챌린저 & 그랜드마스터 순위</p>
+            <p class="text-gray-400 mb-8" th:text="'1~300등 까지의 순위 (' + ${lastUpdated} + ')'">1~300등 까지의 순위 (업데이트 대기중)</p>
 
             <div class="bg-[#1c2127] rounded-lg border border-gray-800 overflow-hidden">
                 <table class="w-full text-left">
@@ -19,7 +19,7 @@
                             <th class="px-6 py-4">소환사</th>
                             <th class="px-6 py-4 text-center">티어</th>
                             <th class="px-6 py-4 text-center">LP</th>
-                            <th class="px-6 py-4 text-center">승률</th>
+                            <th class="px-6 py-4 text-center">Top4 %</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-800">
@@ -54,7 +54,7 @@
                                 <span class="font-bold text-blue-400" th:text="${player.lp} + ' LP'">1,200 LP</span>
                             </td>
 
-                            <!-- 승률 (정보 없으면 - 표시) -->
+                            <!-- 순방률 (Top4 %) (정보 없으면 - 표시) -->
                             <td class="px-6 py-4 text-center text-gray-500 text-sm">
                                 <span th:if="${player.winRate > 0}" th:text="${#numbers.formatDecimal(player.winRate, 1, 1)} + '%'"></span>
                                 <span th:unless="${player.winRate > 0}">-</span>
@@ -71,6 +71,32 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- 페이징 컨트롤러 -->
+            <div th:if="${totalPages != null and totalPages > 1}" class="mt-8 flex justify-center items-center gap-2">
+                <!-- 이전 페이지 버튼 -->
+                <a th:href="@{/ranking(page=${currentPage - 1})}" 
+                   th:classappend="${currentPage <= 1} ? 'pointer-events-none opacity-50' : ''"
+                   class="px-4 py-2 bg-[#1c2127] border border-gray-700 rounded-md hover:bg-gray-700 text-sm font-medium text-gray-300 transition-colors">
+                    이전
+                </a>
+                
+                <!-- 페이지 번호 렌더링 (전체 페이지 수가 적으므로 1~totalPages 전체 출력) -->
+                <th:block th:each="pageNum : ${#numbers.sequence(1, totalPages)}">
+                    <a th:href="@{/ranking(page=${pageNum})}"
+                       th:text="${pageNum}"
+                       th:classappend="${pageNum == currentPage} ? 'bg-blue-600 text-white border-blue-600' : 'bg-[#1c2127] text-gray-400 border-gray-700 hover:bg-gray-700 hover:text-white'"
+                       class="w-10 h-10 flex items-center justify-center border rounded-md text-sm font-bold transition-colors">1</a>
+                </th:block>
+
+                <!-- 다음 페이지 버튼 -->
+                <a th:href="@{/ranking(page=${currentPage + 1})}"
+                   th:classappend="${currentPage >= totalPages} ? 'pointer-events-none opacity-50' : ''"
+                   class="px-4 py-2 bg-[#1c2127] border border-gray-700 rounded-md hover:bg-gray-700 text-sm font-medium text-gray-300 transition-colors">
+                    다음
+                </a>
+            </div>
+
         </div>
     </main>
 </body>

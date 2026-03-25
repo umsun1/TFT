@@ -24,6 +24,10 @@ public class LpHistory {
     private String rank_str; // 'rank'는 SQL 예약어일 수 있어 rank_str로 명명
     private int lp;
 
+    private int wins;
+    private int losses;
+    private int profileIconId;
+
     private LocalDateTime createdAt;
 
     @PrePersist

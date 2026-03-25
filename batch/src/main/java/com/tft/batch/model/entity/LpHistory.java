@@ -24,5 +24,9 @@ public class LpHistory {
     private String rank_str;
     private int lp;
 
+    private int wins;
+    private int losses;
+    private int profileIconId;
+
     private LocalDateTime createdAt;
 }
