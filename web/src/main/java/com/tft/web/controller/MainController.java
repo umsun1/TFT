@@ -52,23 +52,36 @@ public class MainController {
 	public String getSummoner(@PathVariable String server, @PathVariable String gameName, @PathVariable String tagLine, 
 							  @RequestParam(defaultValue = "0") int page,
 							  @RequestParam(defaultValue = "1100") int queueId,
-							  Model model){
-		SummonerProfileDto profile = summonerService.getSummonerData(server, gameName, tagLine, queueId);
-		
-		String puuid = profile.getPuuid();
-		
-		// 페이징 서비스 호출 (DB 기반 조회 및 초기 수집 포함)
-		Page<MatchApiDto> matchPage = matchService.getRecentMatches(puuid, page, queueId);
-		
-		model.addAttribute("matches", matchPage.getContent());
-		model.addAttribute("profile", profile);
-		model.addAttribute("server", server);
-		model.addAttribute("currentPage", page);
-		model.addAttribute("currentQueueId", queueId);
-		model.addAttribute("hasNext", matchPage.hasNext());
-		model.addAttribute("totalMatches", matchPage.getTotalElements());
+							  Model model,
+							  org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes){
+		try {
+			SummonerProfileDto profile = summonerService.getSummonerData(server, gameName, tagLine, queueId);
+			if (profile == null) {
+				redirectAttributes.addFlashAttribute("errorMessage", "소환사를 찾을 수 없거나 Riot API 한도가 초과되었습니다.");
+				return "redirect:/";
+			}
+			
+			String puuid = profile.getPuuid();
+			
+			// 페이징 서비스 호출 (DB 기반 조회 및 초기 수집 포함)
+			Page<MatchApiDto> matchPage = matchService.getRecentMatches(puuid, page, queueId);
+			
+			model.addAttribute("matches", matchPage.getContent());
+			model.addAttribute("profile", profile);
+			model.addAttribute("server", server);
+			model.addAttribute("currentPage", page);
+			model.addAttribute("currentQueueId", queueId);
+			model.addAttribute("hasNext", matchPage.hasNext());
+			model.addAttribute("totalMatches", matchPage.getTotalElements());
 
-		return "tft/summoner";
+			return "tft/summoner";
+		} catch (org.springframework.web.client.HttpClientErrorException.TooManyRequests e) {
+			redirectAttributes.addFlashAttribute("errorMessage", "Riot API 요청 한도가(Rate Limit) 일시적으로 초과되었습니다. 잠시 후 다시 검색해주세요.");
+			return "redirect:/";
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("errorMessage", "검색 중 알 수 없는 오류가 발생했습니다: " + e.getMessage());
+			return "redirect:/";
+		}
 	}
 	
 }

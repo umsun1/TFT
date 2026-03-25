@@ -26,6 +26,15 @@ layout:decorate="~{layout/layout.html}">
             </div>
         </div>
 
+        <!-- Error Message Block -->
+        <div th:if="${errorMessage}" class="max-w-4xl mx-auto w-full p-4 mb-2 text-sm text-red-800 rounded-lg bg-red-100 border border-red-200 shadow-sm" role="alert">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">⚠️</span>
+                <span class="font-bold text-red-700">검색 실패:</span>
+                <span class="text-red-600 font-medium" th:text="${errorMessage}">Error Message</span>
+            </div>
+        </div>
+
         <!-- Search Section -->
         <section class="max-w-4xl mx-auto w-full">
             <div class="bg-[#1c2127] p-8 md:p-10 rounded-2xl border border-gray-800 shadow-xl relative overflow-hidden">
