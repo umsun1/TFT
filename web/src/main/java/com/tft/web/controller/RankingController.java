@@ -23,22 +23,26 @@ public class RankingController {
     // private final TftStaticDataService staticDataService;
 
     @GetMapping("/ranking")
-    public String ranking(@org.springframework.web.bind.annotation.RequestParam(defaultValue = "1") int page, Model model) {
+    public String ranking(@org.springframework.web.bind.annotation.RequestParam(defaultValue = "1") int page,
+            Model model) {
         int pageSize = 100;
 
         // 1. 랭킹 데이터 조회 (최대 300명)
         List<LpHistory> allHistories = lpHistoryRepository.findTopRankers();
-        
+
         int totalElements = allHistories.size();
         int totalPages = (int) Math.ceil((double) totalElements / pageSize);
-        
-        if (totalPages == 0) totalPages = 1;
-        if (page < 1) page = 1;
-        if (page > totalPages) page = totalPages;
-        
+
+        if (totalPages == 0)
+            totalPages = 1;
+        if (page < 1)
+            page = 1;
+        if (page > totalPages)
+            page = totalPages;
+
         int fromIndex = (page - 1) * pageSize;
         int toIndex = Math.min(fromIndex + pageSize, totalElements);
-        
+
         List<LpHistory> histories = new ArrayList<>();
         if (fromIndex < totalElements) {
             histories = allHistories.subList(fromIndex, toIndex);
@@ -58,12 +62,12 @@ public class RankingController {
 
         // 3. 소환사 정보 일괄 조회 (N+1 문제 해결)
         List<ParticipantSimpleDto> participants = participantRepository.findLatestParticipantsByPuuids(puuids);
-        
+
         // 4. 조회 속도를 위해 Map으로 변환
         java.util.Map<String, ParticipantSimpleDto> pMap = participants.stream()
                 .collect(java.util.stream.Collectors.toMap(
-                        ParticipantSimpleDto::getPaPuuid, 
-                        p -> p, 
+                        ParticipantSimpleDto::getPaPuuid,
+                        p -> p,
                         (p1, p2) -> p1 // 중복 발생 시 첫 번째 것 사용 (혹시 모를 대비)
                 ));
 
@@ -75,7 +79,7 @@ public class RankingController {
             String tag = "KR1";
             // DB에 수집된 프로필 아이콘이 있으면 사용, 없으면 여전히 29 (기본값)
             int iconId = h.getProfileIconId() > 0 ? h.getProfileIconId() : 29;
-            String iconUrl = "https://ddragon.leagueoflegends.com/cdn/14.23.1/img/profileicon/" + iconId + ".png"; 
+            String iconUrl = "https://ddragon.leagueoflegends.com/cdn/16.8.1/img/profileicon/" + iconId + ".png";
 
             // Map에서 소환사명 등 정보 조회
             if (pMap.containsKey(h.getPuuid())) {
@@ -84,7 +88,7 @@ public class RankingController {
                 tag = p.getPaTag();
                 // [요청 반영] 전설이(Companion) 아이콘 대신 소환사 아이콘 노출
                 // if (p.getPaCompanionId() != null) {
-                //     iconUrl = staticDataService.getTacticianImgUrl(p.getPaCompanionId());
+                // iconUrl = staticDataService.getTacticianImgUrl(p.getPaCompanionId());
                 // }
             }
 
