@@ -11,28 +11,27 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import jakarta.annotation.PostConstruct;
 
-
 @Service
-public  class TftStaticDataServiceImp implements TftStaticDataService{
+public class TftStaticDataServiceImp implements TftStaticDataService {
 
     @Value("${riot.api.key}")
     private String apiKey;
 
     private Map<Integer, String> tacticianMap = new HashMap<>();
-    //유닛
+    // 유닛
     private Map<String, String> unitMap = new HashMap<>();
     private Map<String, String> unitNameMap = new HashMap<>();
     private Map<String, Integer> unitCostMap = new HashMap<>(); // [추가] 챔피언 비용 맵
     private java.util.List<com.tft.web.model.dto.ChampionDto> allChampions = new java.util.ArrayList<>();
 
-    //아이템
+    // 아이템
     private Map<String, String> itemMap = new HashMap<>();
     private Map<String, String> itemNameMap = new HashMap<>();
-    //시너지
+    // 시너지
     private Map<String, String> traitMap = new HashMap<>();
     private Map<String, String> traitNameMap = new HashMap<>();
-    
-    private final String VERSION = "16.4.1";
+
+    private final String VERSION = "16.8.1";
 
     @PostConstruct
     public void init() {
@@ -52,6 +51,7 @@ public  class TftStaticDataServiceImp implements TftStaticDataService{
             e.printStackTrace();
         }
     }
+
     // 전설이 데이터 전용 로더
     private void loadTacticianData(RestTemplate restTemplate) {
         String url = "https://ddragon.leagueoflegends.com/cdn/" + VERSION + "/data/ko_KR/tft-tactician.json";
@@ -66,6 +66,7 @@ public  class TftStaticDataServiceImp implements TftStaticDataService{
         });
         System.out.println("- 전설이 데이터 로드 완료 (" + tacticianMap.size() + "개)");
     }
+
     // 챔피언 데이터 전용 로더
     private void loadUnitData(RestTemplate restTemplate) {
         String url = "https://ddragon.leagueoflegends.com/cdn/" + VERSION + "/data/ko_KR/tft-champion.json";
@@ -74,16 +75,17 @@ public  class TftStaticDataServiceImp implements TftStaticDataService{
 
         data.fields().forEachRemaining(entry -> {
             JsonNode unitNode = entry.getValue();
-            
+
             // entry.getKey() 대신 노드 안의 "id" 필드를 가져옵니다.
             String realId = unitNode.get("id").asText(); // "TFT15_Aatrox"
 
-            // 시즌 16 기물만 필터링 (TFT16으로 시작하는 것만)
-            if (!realId.startsWith("TFT16")) return;
+            // 시즌 17 기물만 필터링 (TFT17으로 시작하는 것만)
+            if (!realId.startsWith("TFT17"))
+                return;
 
             String imgFull = unitNode.get("image").get("full").asText();
             String koName = unitNode.get("name").asText();
-            int cost = unitNode.has("tier") ? unitNode.get("tier").asInt() : 1; // [추가] 비용 파싱
+            int cost = unitNode.has("tier") ? unitNode.get("tier").asInt() : 1;
 
             unitMap.put(realId, imgFull);
             unitNameMap.put(realId, koName);
@@ -103,23 +105,25 @@ public  class TftStaticDataServiceImp implements TftStaticDataService{
                     .traits(traits)
                     .build());
         });
-        
-        // 티버 수동 추가 (소환수라 JSON에 없을 수 있음)
-        if (allChampions.stream().noneMatch(c -> c.getId().equals("TFT16_AnnieTibbers"))) {
-            allChampions.add(com.tft.web.model.dto.ChampionDto.builder()
-                    .id("TFT16_AnnieTibbers")
-                    .name("티버")
-                    .cost(5) // 애니와 동일한 코스트로 가정
-                    .imgUrl("https://cdn.lolchess.gg/upload/images/champions/TFT16_AnnieTibbers.jpg")
-                    .traits(java.util.List.of())
-                    .build());
-        }
 
-        // [추가] 코스트 오름차순 정렬
+        // 티버 수동 추가 (소환수라 JSON에 없을 수 있음) (16시즌 끝나서 무의미해짐)
+        // if (allChampions.stream().noneMatch(c ->
+        // c.getId().equals("TFT16_AnnieTibbers"))) {
+        // allChampions.add(com.tft.web.model.dto.ChampionDto.builder()
+        // .id("TFT16_AnnieTibbers")
+        // .name("티버")
+        // .cost(5) // 애니와 동일한 코스트로 가정
+        // .imgUrl("https://cdn.lolchess.gg/upload/images/champions/TFT16_AnnieTibbers.jpg")
+        // .traits(java.util.List.of())
+        // .build());
+        // }
+
+        // 코스트 오름차순 정렬
         allChampions.sort(java.util.Comparator.comparingInt(com.tft.web.model.dto.ChampionDto::getCost));
 
         System.out.println("- 유닛 데이터 로드 완료 (" + unitMap.size() + "개)");
     }
+
     // 아이템 데이터 전용 로더
     private void loadItemData(RestTemplate restTemplate) {
         String url = "https://ddragon.leagueoflegends.com/cdn/" + VERSION + "/data/ko_KR/tft-item.json";
@@ -127,12 +131,12 @@ public  class TftStaticDataServiceImp implements TftStaticDataService{
         data.fields().forEachRemaining(entry -> {
             JsonNode itemNode = entry.getValue();
             String actualId = itemNode.get("id").asText();
-            
+
             // 이미지 파일명
             String imgFull = itemNode.get("image").get("full").asText();
             // 한글 이름
             String koName = itemNode.get("name").asText();
-            
+
             itemMap.put(actualId, imgFull);
             itemNameMap.put(actualId, koName);
         });
@@ -150,7 +154,7 @@ public  class TftStaticDataServiceImp implements TftStaticDataService{
                 String key = entry.getKey(); // "TFT16_Glutton"
                 JsonNode traitNode = entry.getValue();
                 String imgFull = traitNode.get("image").get("full").asText(); // "Trait_Icon_16_Glutton..."
-                
+
                 traitMap.put(key, imgFull); // entry.getKey()를 쓰는 것이 더 확실할 수 있습니다.
                 traitNameMap.put(key, traitNode.get("name").asText());
             });
@@ -172,10 +176,11 @@ public  class TftStaticDataServiceImp implements TftStaticDataService{
     @Override
     public String getUnitImgUrl(String characterId) {
         String fileName = unitMap.get(characterId);
-        // 티버(AnnieTibbers) 예외 처리
-        if (characterId.equalsIgnoreCase("TFT16_AnnieTibbers")) {
-            return "https://cdn.lolchess.gg/upload/images/champions/TFT16_AnnieTibbers.jpg";
-        }
+        // 티버(AnnieTibbers) 예외 처리 (16시즌 끝나서 무의미해짐)
+        // if (characterId.equalsIgnoreCase("TFT16_AnnieTibbers")) {
+        // return
+        // "https://cdn.lolchess.gg/upload/images/champions/TFT16_AnnieTibbers.jpg";
+        // }
         if (fileName == null) {
             return "https://ddragon.leagueoflegends.com/cdn/" + VERSION + "/img/profileicon/1.png";
         }
@@ -185,22 +190,25 @@ public  class TftStaticDataServiceImp implements TftStaticDataService{
     @Override
     public String getItemImgUrl(int itemId) {
         String fileName = itemMap.get(itemId);
-        if (fileName == null) return "";
+        if (fileName == null)
+            return "";
         return "https://ddragon.leagueoflegends.com/cdn/" + VERSION + "/img/tft-item/" + fileName;
     }
 
     @Override
     public String getItemImgUrlByName(String itemName) {
-        if (itemName == null || itemName.isEmpty()) return "";
+        if (itemName == null || itemName.isEmpty())
+            return "";
         return "https://ddragon.leagueoflegends.com/cdn/" + VERSION + "/img/tft-item/" + itemName + ".png";
     }
-    
+
     @Override
     public String getTraitIconUrl(String traitName) {
-        if (traitName == null) return "";
+        if (traitName == null)
+            return "";
         // 맵에서 실제 파일명을 찾습니다.
         String fileName = traitMap.get(traitName);
-        
+
         // 맵에 없으면 기본 규칙으로 시도
         if (fileName == null) {
             fileName = traitName + ".png";
@@ -212,15 +220,17 @@ public  class TftStaticDataServiceImp implements TftStaticDataService{
     public String getTraitKoName(String traitId) {
         return traitNameMap.getOrDefault(traitId, traitId); // 없으면 ID 그대로 반환
     }
+
     @Override
     public String getItemKoName(String englishName) {
         return itemNameMap.getOrDefault(englishName, englishName);
     }
 
     @Override
-    public String getUnitKoName(String characterId){
+    public String getUnitKoName(String characterId) {
         return unitNameMap.getOrDefault(characterId, characterId);
     }
+
     @Override
     public int getChampionCost(String name) {
         return unitCostMap.getOrDefault(name, 1);

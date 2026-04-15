@@ -34,7 +34,7 @@ import com.tft.web.repository.ParticipantRepository;
 
 @Service
 @org.springframework.transaction.annotation.Transactional(readOnly = true)
-public  class SummonerServiceImp implements SummonerService{
+public class SummonerServiceImp implements SummonerService {
 
     @Value("${riot.api.key}")
     private String apiKey;
@@ -58,30 +58,32 @@ public  class SummonerServiceImp implements SummonerService{
     @org.springframework.transaction.annotation.Transactional
     public SummonerProfileDto getSummonerData(String server, String gameName, String tagLine, Integer queueId) {
         String cacheKey = gameName + "#" + tagLine;
-        
+
         // 1. Riot ID → Account (캐시 확인)
         RiotAccountDto account = accountCache.get(cacheKey);
         if (account == null) {
             account = getAccountByRiotId(gameName, tagLine);
-            if (account == null) return null;
+            if (account == null)
+                return null;
             accountCache.put(cacheKey, account);
         }
         String puuid = account.getPuuid();
 
         // 병렬 처리 1 (소환사 리그 정보)
-        CompletableFuture<TftLeagueEntryDto> leagueFuture = 
-            CompletableFuture.supplyAsync(() -> {
-                // 캐시에 저장되어 있는지 확인
-                TftLeagueEntryDto cached = leagueCache.get(puuid);
-                if (cached != null) return cached;
-                // API 호출
-                TftLeagueEntryDto league = getTftLeagueByPuuid(puuid);
-                if (league != null) leagueCache.put(puuid, league);
-                return league;
-            });
+        CompletableFuture<TftLeagueEntryDto> leagueFuture = CompletableFuture.supplyAsync(() -> {
+            // 캐시에 저장되어 있는지 확인
+            TftLeagueEntryDto cached = leagueCache.get(puuid);
+            if (cached != null)
+                return cached;
+            // API 호출
+            TftLeagueEntryDto league = getTftLeagueByPuuid(puuid);
+            if (league != null)
+                leagueCache.put(puuid, league);
+            return league;
+        });
         // 병렬 처리 2 (소환사 레벨 및 아이콘)
-        CompletableFuture<SummonerDto> summonerFuture = 
-            CompletableFuture.supplyAsync(() -> getTftSummonerByPuuid(puuid));
+        CompletableFuture<SummonerDto> summonerFuture = CompletableFuture
+                .supplyAsync(() -> getTftSummonerByPuuid(puuid));
 
         // 큐 등록 (상태 갱신만 수행, DB 쓰기 발생)
         updateFetchQueue(puuid);
@@ -101,7 +103,7 @@ public  class SummonerServiceImp implements SummonerService{
 
             // 1. 전체 통계 계산 (DB 기반 - SQL 집계)
             SummonerStatsDto stats = participantRepository.getSummonerStats(puuid, queueId == null ? 0 : queueId);
-            
+
             if (stats != null && stats.getTotalCount() > 0) {
                 profile.setAvgPlacement(stats.getAvgPlacement());
                 profile.setWinRate((double) stats.getWinCount() / stats.getTotalCount() * 100.0);
@@ -111,10 +113,9 @@ public  class SummonerServiceImp implements SummonerService{
 
             // 2. 최근 20게임 상세 통계 (필요한 데이터만 조회)
             List<Participant> recentMatches = participantRepository.findRecentMatchesByPuuid(
-                puuid, 
-                queueId == null ? 0 : queueId, 
-                PageRequest.of(0, 20)
-            );
+                    puuid,
+                    queueId == null ? 0 : queueId,
+                    PageRequest.of(0, 20));
 
             if (!recentMatches.isEmpty()) {
                 calculateAchievements(profile, recentMatches);
@@ -125,20 +126,25 @@ public  class SummonerServiceImp implements SummonerService{
             profile.setLp(league.getLeaguePoints());
             profile.setWins(league.getWins());
             profile.setLosses(league.getLosses());
-            
+
             profile.setCollectedCount(stats != null ? stats.getTotalCount().intValue() : 0);
             profile.setTotalCount(league.getWins() + league.getLosses());
             profile.setFetching(profile.getCollectedCount() < profile.getTotalCount());
+            
+            // 티어 날개 URL 설정
+            profile.setTierWingsUrl("https://cdn.metatft.com/file/metatft/ranks/wings_" + profile.getTier().toLowerCase() + ".png");
         } else {
             profile.setTier("UNRANKED");
             profile.setRank("");
+            // 언랭크 전용 테두리 설정
+            profile.setTierWingsUrl("https://cdn.metatft.com/file/metatft/borders/theme-5-border.png");
         }
-        
+
         if (summoner != null) {
             profile.setProfileIconId(summoner.getProfileIconId());
             profile.setSummonerLevel(summoner.getSummonerLevel());
         }
-        
+
         // LP 히스토리 그래프 데이터 구성 (최적화: 필요한 필드만 조회 권장)
         loadLpHistoryData(profile, puuid);
 
@@ -152,7 +158,8 @@ public  class SummonerServiceImp implements SummonerService{
 
     private void saveLpHistory(String puuid, TftLeagueEntryDto league) {
         LpHistory lastRecord = lpHistoryRepository.findTopByPuuidOrderByCreatedAtDesc(puuid);
-        if (lastRecord == null || lastRecord.getLp() != league.getLeaguePoints() || !lastRecord.getTier().equals(league.getTier())) {
+        if (lastRecord == null || lastRecord.getLp() != league.getLeaguePoints()
+                || !lastRecord.getTier().equals(league.getTier())) {
             lpHistoryRepository.save(LpHistory.builder()
                     .puuid(puuid)
                     .tier(league.getTier())
@@ -170,10 +177,13 @@ public  class SummonerServiceImp implements SummonerService{
 
         for (Participant p : recentMatches) {
             int place = p.getPaPlacement();
-            if (place >= 1 && place <= 8) counts[place - 1]++;
+            if (place >= 1 && place <= 8)
+                counts[place - 1]++;
             recentTotalPlacement += place;
-            if (place <= 4) recentTop4++;
-            if (place == 1) recentWins++;
+            if (place <= 4)
+                recentTop4++;
+            if (place == 1)
+                recentWins++;
         }
 
         profile.setRankCounts(counts);
@@ -185,7 +195,7 @@ public  class SummonerServiceImp implements SummonerService{
                 .collect(Collectors.toList()));
 
         List<String> achievements = new ArrayList<>();
-        
+
         // 간단한 업적부터 계산
         if (recentMatches.size() >= 3) {
             boolean isWinningStreak = true;
@@ -195,24 +205,30 @@ public  class SummonerServiceImp implements SummonerService{
                     break;
                 }
             }
-            if (isWinningStreak) achievements.add("🔥 연승 중");
+            if (isWinningStreak)
+                achievements.add("🔥 연승 중");
         }
-        if (profile.getRecentTop4Rate() >= 75.0) achievements.add("📈 순방의 신");
-        if (recentWins >= 4) achievements.add("👑 1등 수집가");
+        if (profile.getRecentTop4Rate() >= 75.0)
+            achievements.add("📈 순방의 신");
+        if (recentWins >= 4)
+            achievements.add("👑 1등 수집가");
 
         // 유닛/시너지 기반 업적은 필요한 경우에만 계산 (Lazy 로딩 최소화)
         double avg3Stars = recentMatches.stream()
-            .mapToDouble(p -> p.getUnits().stream().filter(u -> u.getUnTier() == 3).count())
-            .average().orElse(0);
-        if (avg3Stars >= 2.0) achievements.add("✨ 리롤 장인");
+                .mapToDouble(p -> p.getUnits().stream().filter(u -> u.getUnTier() == 3).count())
+                .average().orElse(0);
+        if (avg3Stars >= 2.0)
+            achievements.add("✨ 리롤 장인");
 
         double avgHighValue = recentMatches.stream()
-            .mapToDouble(p -> p.getUnits().stream().filter(u -> u.getUnCost() >= 4).count())
-            .average().orElse(0);
-        if (avgHighValue >= 4.0) achievements.add("💎 고밸류 지향");
+                .mapToDouble(p -> p.getUnits().stream().filter(u -> u.getUnCost() >= 4).count())
+                .average().orElse(0);
+        if (avgHighValue >= 4.0)
+            achievements.add("💎 고밸류 지향");
 
         long level9Count = recentMatches.stream().filter(p -> p.getPaLevel() >= 9).count();
-        if ((double) level9Count / recentMatches.size() >= 0.3) achievements.add("🚀 후전드");
+        if ((double) level9Count / recentMatches.size() >= 0.3)
+            achievements.add("🚀 후전드");
 
         profile.setAchievements(achievements);
     }
@@ -220,38 +236,60 @@ public  class SummonerServiceImp implements SummonerService{
     private void loadLpHistoryData(SummonerProfileDto profile, String puuid) {
         List<LpHistory> historyList = lpHistoryRepository.findTop15ByPuuidOrderByCreatedAtDesc(puuid);
         Collections.reverse(historyList);
-        
+
         profile.setLpHistory(historyList.stream()
-            .map(h -> convertTierToTotalLp(h.getTier(), h.getRank_str(), h.getLp()))
-            .collect(Collectors.toList()));
+                .map(h -> convertTierToTotalLp(h.getTier(), h.getRank_str(), h.getLp()))
+                .collect(Collectors.toList()));
         profile.setRealLpHistory(historyList.stream()
-            .map(LpHistory::getLp)
-            .collect(Collectors.toList()));
+                .map(LpHistory::getLp)
+                .collect(Collectors.toList()));
         profile.setLpHistoryLabels(historyList.stream()
-            .map(h -> h.getCreatedAt().format(DateTimeFormatter.ofPattern("MM-dd")))
-            .collect(Collectors.toList()));
+                .map(h -> h.getCreatedAt().format(DateTimeFormatter.ofPattern("MM-dd")))
+                .collect(Collectors.toList()));
         profile.setLpHistoryTiers(historyList.stream()
-            .map(h -> h.getTier() + " " + h.getRank_str())
-            .collect(Collectors.toList()));
+                .map(h -> h.getTier() + " " + h.getRank_str())
+                .collect(Collectors.toList()));
     }
 
     // 그래프용 티어 점수 계산기
     private int convertTierToTotalLp(String tier, String rank, int lp) {
-        if (tier == null) return 0;
-        
+        if (tier == null)
+            return 0;
+
         int baseScore = 0;
         switch (tier) {
-            case "IRON":        baseScore = 0; break;
-            case "BRONZE":      baseScore = 400; break;
-            case "SILVER":      baseScore = 800; break;
-            case "GOLD":        baseScore = 1200; break;
-            case "PLATINUM":    baseScore = 1600; break;
-            case "EMERALD":     baseScore = 2000; break;
-            case "DIAMOND":     baseScore = 2400; break;
-            case "MASTER":      baseScore = 2800; break;
-            case "GRANDMASTER": baseScore = 2800; break; // 마스터 이상은 LP로만 구분
-            case "CHALLENGER":  baseScore = 2800; break;
-            default:            baseScore = 0;
+            case "IRON":
+                baseScore = 0;
+                break;
+            case "BRONZE":
+                baseScore = 400;
+                break;
+            case "SILVER":
+                baseScore = 800;
+                break;
+            case "GOLD":
+                baseScore = 1200;
+                break;
+            case "PLATINUM":
+                baseScore = 1600;
+                break;
+            case "EMERALD":
+                baseScore = 2000;
+                break;
+            case "DIAMOND":
+                baseScore = 2400;
+                break;
+            case "MASTER":
+                baseScore = 2800;
+                break;
+            case "GRANDMASTER":
+                baseScore = 2800;
+                break; // 마스터 이상은 LP로만 구분
+            case "CHALLENGER":
+                baseScore = 2800;
+                break;
+            default:
+                baseScore = 0;
         }
 
         // 마스터 이상은 랭크(I, II, III, IV) 개념이 없음
@@ -263,10 +301,18 @@ public  class SummonerServiceImp implements SummonerService{
         int rankScore = 0;
         if (rank != null) {
             switch (rank) {
-                case "IV": rankScore = 0; break;
-                case "III": rankScore = 100; break;
-                case "II": rankScore = 200; break;
-                case "I": rankScore = 300; break;
+                case "IV":
+                    rankScore = 0;
+                    break;
+                case "III":
+                    rankScore = 100;
+                    break;
+                case "II":
+                    rankScore = 200;
+                    break;
+                case "I":
+                    rankScore = 300;
+                    break;
             }
         }
 
@@ -275,21 +321,19 @@ public  class SummonerServiceImp implements SummonerService{
 
     // 닉네임 + 태그라인 -> PUUID
     public RiotAccountDto getAccountByRiotId(String gameName, String tagLine) {
-        String url = "https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/"+ gameName + "/" + tagLine;
+        String url = "https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/" + gameName + "/" + tagLine;
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-Riot-Token", apiKey);
 
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<RiotAccountDto> response =
-                restTemplate.exchange(
-                        url,
-                        HttpMethod.GET,
-                        entity,
-                        RiotAccountDto.class
-                );
-                System.out.println(response.getBody());
+        ResponseEntity<RiotAccountDto> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                RiotAccountDto.class);
+        System.out.println(response.getBody());
         return response.getBody();
     }
 
@@ -303,55 +347,55 @@ public  class SummonerServiceImp implements SummonerService{
         // List<TftLeagueEntryDto> 형태로 받아야 합니다.
 
         try {
-            ResponseEntity<List<TftLeagueEntryDto>> response =
-                restTemplate.exchange(
-                        url,
-                        HttpMethod.GET,
-                        entity,
-                        new ParameterizedTypeReference<List<TftLeagueEntryDto>>() {}
-                );
+            ResponseEntity<List<TftLeagueEntryDto>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    new ParameterizedTypeReference<List<TftLeagueEntryDto>>() {
+                    });
 
             List<TftLeagueEntryDto> results = response.getBody();
-            if (results == null || results.isEmpty()) return null;
+            if (results == null || results.isEmpty())
+                return null;
 
             // RANKED_TFT (솔로 랭크)를 우선적으로 찾음
             return results.stream()
-                .filter(league -> "RANKED_TFT".equals(league.getQueueType()))
-                .findFirst()
-                .orElse(results.get(0)); // 솔랭이 없으면 첫 번째 정보라도 반환
-        }  catch (HttpClientErrorException.TooManyRequests e) {
+                    .filter(league -> "RANKED_TFT".equals(league.getQueueType()))
+                    .findFirst()
+                    .orElse(results.get(0)); // 솔랭이 없으면 첫 번째 정보라도 반환
+        } catch (HttpClientErrorException.TooManyRequests e) {
             String retryAfter = e.getResponseHeaders().getFirst("Retry-After");
-            System.err.println("매치 상세 조회 실패: "+ retryAfter+"후에 다시 시도 하시오.");
+            System.err.println("매치 상세 조회 실패: " + retryAfter + "후에 다시 시도 하시오.");
             e.printStackTrace();
             return null;
         }
     }
 
     // PUUID -> 소환사 레벨, 아이콘
-    public SummonerDto getTftSummonerByPuuid(String puuid){
+    public SummonerDto getTftSummonerByPuuid(String puuid) {
         String url = "https://kr.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/" + puuid;
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-Riot-Token", apiKey);
 
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<SummonerDto> response =
-                restTemplate.exchange(
-                        url,
-                        HttpMethod.GET,
-                        entity,
-                        SummonerDto.class
-                );
-                System.out.println(response.getBody());
+        ResponseEntity<SummonerDto> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                SummonerDto.class);
+        System.out.println(response.getBody());
         return response.getBody();
     }
 
     // 플레이어 평균 등수 계산
     public double getAveragePlacement(String puuid) {
         // 1. DB에서 이 유저의 시즌 16 참가 기록만 가져옴
-        List<Participant> seasonMatches = participantRepository.findByPaPuuidAndGameInfo_GaDatetimeAfter(puuid, LocalDateTime.of(2025, 12, 3, 0, 0)); // 시즌 시작일 기준)
+        List<Participant> seasonMatches = participantRepository.findByPaPuuidAndGameInfo_GaDatetimeAfter(puuid,
+                LocalDateTime.of(2026, 4, 15, 0, 0)); // 시즌 시작일 기준)
 
-        if (seasonMatches.isEmpty()) return 0.0;
+        if (seasonMatches.isEmpty())
+            return 0.0;
 
         // 2. 등수 합산 및 평균 계산
         int totalRank = seasonMatches.stream()
@@ -381,6 +425,4 @@ public  class SummonerServiceImp implements SummonerService{
         return Map.of("winCount", winCount, "winRate", winRate);
     }
 
-    
-    
 }

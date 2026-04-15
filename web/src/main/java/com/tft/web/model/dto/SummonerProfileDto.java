@@ -45,4 +45,7 @@ public class SummonerProfileDto {
 
     // [추가] 최근 20게임 등수 리스트
     private java.util.List<Integer> recentPlacements;
+
+    // [추가] 티어 날개 또는 테두리 URL
+    private String tierWingsUrl;
 }

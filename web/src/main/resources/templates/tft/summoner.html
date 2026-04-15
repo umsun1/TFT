@@ -1,433 +1,476 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
 	layout:decorate="~{layout/layout.html}">
+
 <head>
-    <meta charset="UTF-8">
-    <title>TFT Matches - Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<meta charset="UTF-8">
+	<title>TFT Matches - Analytics</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body style="background-color: #212529; color: #ffffff;">
 	<div class="container mx-auto px-4">
-	<main layout:fragment="content" class="bg-[#0f1215] min-h-screen text-white p-6">
-		<div class="max-w-7xl mx-auto grid grid-cols-12 gap-6">
-			<!-- Summoner Profile -->
-			<aside class="col-span-3 space-y-4 sticky top-24 h-fit">
-				<div class="bg-[#1c2127] rounded-lg p-6 flex flex-col items-center border border-gray-800">
-					<!-- 프로필 (티어 날개 겹치기) -->
-					<div class="relative mb-12 flex justify-center items-center w-full h-32 mt-12">
-						<!-- 소환사 아이콘 (합체 완료: 26px) -->
-						<div class="w-20 h-20 bg-blue-900/20 rounded-full flex items-center justify-center border-2 border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.6)] overflow-hidden relative z-0"
-							 style="top: 26px;">
-							<img th:src="'http://ddragon.leagueoflegends.com/cdn/16.4.1/img/profileicon/' + ${profile.profileIconId} + '.png'" alt="프로필 아이콘" loading="lazy" class="w-full h-full object-cover rounded-full">
-						</div>
+		<main layout:fragment="content" class="bg-[#0f1215] min-h-screen text-white p-6">
+			<div class="max-w-7xl mx-auto grid grid-cols-12 gap-6">
+				<!-- Summoner Profile -->
+				<aside class="col-span-3 space-y-4 sticky top-24 h-fit">
+					<div class="bg-[#1c2127] rounded-lg p-6 flex flex-col items-center border border-gray-800">
+						<!-- 프로필 (티어 날개 겹치기) -->
+						<div class="relative mb-12 flex justify-center items-center w-full h-32 mt-12">
+							<!-- 소환사 아이콘 (합체 완료: 26px) -->
+							<div class="w-20 h-20 bg-blue-900/20 rounded-full flex items-center justify-center border-2 border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.6)] overflow-hidden relative z-0"
+								style="top: 26px;">
+								<img th:src="'http://ddragon.leagueoflegends.com/cdn/16.8.1/img/profileicon/' + ${profile.profileIconId} + '.png'"
+									alt="프로필 아이콘" loading="lazy" class="w-full h-full object-cover rounded-full">
+							</div>
 
-						<!-- 티어 날개 아이콘 (정중앙 고정) -->
-						<img th:src="'https://cdn.metatft.com/file/metatft/ranks/wings_' + ${profile.tier.toLowerCase()} + '.png'" 
-							 class="absolute w-56 h-auto z-10 pointer-events-none max-w-none" 
-							 th:alt="${profile.tier}"
-							 loading="lazy"
-							 style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
-					</div>
-					<div class="text-center">
-						<!-- 닉네임 & 태그라인 -->
-						<h2 class="text-xl font-bold ">
-							<span th:text="${profile.summonerName}"></span>
-							<span class="text-gray-500 text-sm font-normal" th:text="'#' + ${profile.tagLine}"></span>
-						</h2>
-						<!-- 티어 및 점수 (마스터 이상 숫자 제거) -->
-						<p class="text-blue-400 font-bold mt-1" 
-						   th:text="${profile.tier} + 
+							<!-- 티어 날개 아이콘 (정중앙 고정) -->
+							<img th:src="${profile.tierWingsUrl}"
+								class="absolute w-56 h-auto z-10 pointer-events-none max-w-none"
+								th:alt="${profile.tier}" loading="lazy"
+								style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+						</div>
+						<div class="text-center">
+							<!-- 닉네임 & 태그라인 -->
+							<h2 class="text-xl font-bold ">
+								<span th:text="${profile.summonerName}"></span>
+								<span class="text-gray-500 text-sm font-normal"
+									th:text="'#' + ${profile.tagLine}"></span>
+							</h2>
+							<!-- 티어 및 점수 (마스터 이상 숫자 제거) -->
+							<p class="text-blue-400 font-bold mt-1" th:text="${profile.tier} + 
 						   (${profile.tier == 'MASTER' or profile.tier == 'GRANDMASTER' or profile.tier == 'CHALLENGER' ? '' : ' ' + profile.rank}) + 
 						   ' ' + ${profile.lp} + ' LP'">
-						</p>
-						
-						<!-- 데이터 수집 상태 표시 -->
-						<div th:if="${profile.fetching}" class="mt-4 w-full px-2">
-							<div class="flex justify-between text-[10px] text-gray-400 mb-1">
-								<span>과거 전적 수집 중...</span>
-								<span th:text="${profile.collectedCount} + '/' + ${profile.totalCount}"></span>
-							</div>
-							<div class="w-full bg-gray-800 rounded-full h-1.5">
-								<div class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" 
-									 th:style="'width: ' + (${profile.totalCount > 0} ? (${profile.collectedCount} * 100 / ${profile.totalCount}) : 0) + '%'"></div>
-							</div>
-							<p class="text-[9px] text-gray-500 mt-1">모든 데이터가 수집되면 통계가 정확해집니다.</p>
-						</div>
+							</p>
 
-						<!-- To Do -->
-						<!-- <p class="text-gray-500 text-xs mt-1">랭크 #24,561 (상위 2.029%)</p> -->
-					</div>
-					<!-- 통계 -->
-					<div class="w-full mt-8 space-y-3">
-						<div class="flex justify-between items-center bg-[#12161b] p-3 rounded">
-							<span class="text-xs text-gray-400">평균 등수</span>
-							<span class="text-lg font-bold text-yellow-500 tracking-tight" th:text="${#numbers.formatDecimal(profile.avgPlacement, 1, 2)}"></span>
-						</div>
-						<div class="grid grid-cols-2 gap-2">
-							<div class="bg-[#12161b] p-3 rounded text-center">
-								<p class="text-xs text-gray-400 mb-1">순방 확률</p>
-								<p class="text-md font-bold text-green-500" th:text="${#numbers.formatDecimal(profile.top4Rate* 100, 1, 1)} + '%'"></p>
+							<!-- 데이터 수집 상태 표시 -->
+							<div th:if="${profile.fetching}" class="mt-4 w-full px-2">
+								<div class="flex justify-between text-[10px] text-gray-400 mb-1">
+									<span>과거 전적 수집 중...</span>
+									<span th:text="${profile.collectedCount} + '/' + ${profile.totalCount}"></span>
+								</div>
+								<div class="w-full bg-gray-800 rounded-full h-1.5">
+									<div class="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
+										th:style="'width: ' + (${profile.totalCount > 0} ? (${profile.collectedCount} * 100 / ${profile.totalCount}) : 0) + '%'">
+									</div>
+								</div>
+								<p class="text-[9px] text-gray-500 mt-1">모든 데이터가 수집되면 통계가 정확해집니다.</p>
 							</div>
-							<div class="bg-[#12161b] p-3 rounded text-center">
-								<p class="text-xs text-gray-400 mb-1">승률</p>
-								<p class="text-md font-bold text-white" th:text="${#numbers.formatDecimal(profile.winRate, 1, 1)} + '%'"></p>
+
+							<!-- To Do -->
+							<!-- <p class="text-gray-500 text-xs mt-1">랭크 #24,561 (상위 2.029%)</p> -->
+						</div>
+						<!-- 통계 -->
+						<div class="w-full mt-8 space-y-3">
+							<div class="flex justify-between items-center bg-[#12161b] p-3 rounded">
+								<span class="text-xs text-gray-400">평균 등수</span>
+								<span class="text-lg font-bold text-yellow-500 tracking-tight"
+									th:text="${#numbers.formatDecimal(profile.avgPlacement, 1, 2)}"></span>
+							</div>
+							<div class="grid grid-cols-2 gap-2">
+								<div class="bg-[#12161b] p-3 rounded text-center">
+									<p class="text-xs text-gray-400 mb-1">순방 확률</p>
+									<p class="text-md font-bold text-green-500"
+										th:text="${#numbers.formatDecimal(profile.top4Rate* 100, 1, 1)} + '%'"></p>
+								</div>
+								<div class="bg-[#12161b] p-3 rounded text-center">
+									<p class="text-xs text-gray-400 mb-1">승률</p>
+									<p class="text-md font-bold text-white"
+										th:text="${#numbers.formatDecimal(profile.winRate, 1, 1)} + '%'"></p>
+								</div>
 							</div>
 						</div>
-					</div>
-					<!-- 업적 -->
-					<div class="w-full mt-6 flex flex-wrap gap-2">
-						<span th:each="tag : ${profile.achievements}" 
-							th:text="${tag}"
-							class="text-[10px] px-2 py-1 rounded border font-bold shadow-sm"
-							th:classappend="${tag.contains('🔥')} ? 'bg-orange-900/30 text-orange-500 border-orange-900/50' : 
+						<!-- 업적 -->
+						<div class="w-full mt-6 flex flex-wrap gap-2">
+							<span th:each="tag : ${profile.achievements}" th:text="${tag}"
+								class="text-[10px] px-2 py-1 rounded border font-bold shadow-sm" th:classappend="${tag.contains('🔥')} ? 'bg-orange-900/30 text-orange-500 border-orange-900/50' : 
 											(${tag.contains('👑')} ? 'bg-yellow-900/30 text-yellow-500 border-yellow-900/50' : 
 											(${tag.contains('💎')} ? 'bg-purple-900/30 text-purple-400 border-purple-900/50' : 
 											(${tag.contains('🚀')} ? 'bg-blue-900/30 text-blue-400 border-blue-900/50' : 
 											(${tag.contains('#')} ? 'bg-green-900/20 text-green-500 border-green-900/50' : 
 											'bg-blue-900/20 text-blue-500 border-blue-900/50'))))">
-						</span>
-						<span th:if="${#lists.isEmpty(profile.achievements)}" class="text-[10px] text-gray-500 italic">스타일 분석 중...</span>
-					</div>
-				</div>
-			</aside>
-			<main class="col-span-9 space-y-6">
-				<!-- Game Mode Tabs -->
-				<div class="flex gap-2">
-					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1100)}"
-					   class="px-4 py-2 rounded text-sm font-bold transition-colors"
-					   th:classappend="${currentQueueId == 1100} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
-					   랭크
-					</a>
-					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1090)}"
-					   class="px-4 py-2 rounded text-sm font-bold transition-colors"
-					   th:classappend="${currentQueueId == 1090} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
-					   일반
-					</a>
-					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1160)}"
-					   class="px-4 py-2 rounded text-sm font-bold transition-colors"
-					   th:classappend="${currentQueueId == 1160} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
-					   더블업
-					</a>
-					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1110)}"
-					   class="px-4 py-2 rounded text-sm font-bold transition-colors"
-					   th:classappend="${currentQueueId == 1110} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
-					   초고속
-					</a>
-					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=0)}"
-					   class="px-4 py-2 rounded text-sm font-bold transition-colors"
-					   th:classappend="${currentQueueId == 0} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
-					   전체
-					</a>
-				</div>
-
-				<!-- Match Summary -->
-				<section class="bg-[#1c2127] rounded-lg p-6 grid grid-cols-12 gap-8 border border-gray-800">
-					<div class="col-span-5 border-r border-gray-800 pr-4">
-						<div class="flex justify-between items-end mb-4">
-							<h3 class="text-xs text-gray-400 font-bold uppercase tracking-wider">최근 20게임 등수 분포</h3>
-							<span class="text-xl font-black text-yellow-500">
-								<span th:text="${#numbers.formatDecimal(profile.recentAvgPlacement, 1, 2)}"></span>
-								<small class="text-[10px] text-gray-500 font-normal">평균</small>
 							</span>
+							<span th:if="${#lists.isEmpty(profile.achievements)}"
+								class="text-[10px] text-gray-500 italic">스타일 분석 중...</span>
 						</div>
-						<canvas id="rankChart" height="120"></canvas>
-						<!-- 최근 20경기 등수 뱃지 (10개씩 정렬) -->
-						<div class="grid grid-cols-10 gap-1 mt-4">
-							<div th:each="placement : ${profile.recentPlacements}" 
-								 th:text="${placement}"
-								 class="w-6 h-6 rounded flex items-center justify-center text-[11px] font-bold text-white shadow-sm"
-								 th:classappend="${placement == 1} ? 'bg-[#1fb27c]' : 
+					</div>
+				</aside>
+				<main class="col-span-9 space-y-6">
+					<!-- Game Mode Tabs -->
+					<div class="flex gap-2">
+						<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1100)}"
+							class="px-4 py-2 rounded text-sm font-bold transition-colors"
+							th:classappend="${currentQueueId == 1100} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
+							랭크
+						</a>
+						<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1090)}"
+							class="px-4 py-2 rounded text-sm font-bold transition-colors"
+							th:classappend="${currentQueueId == 1090} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
+							일반
+						</a>
+						<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1160)}"
+							class="px-4 py-2 rounded text-sm font-bold transition-colors"
+							th:classappend="${currentQueueId == 1160} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
+							더블업
+						</a>
+						<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=1110)}"
+							class="px-4 py-2 rounded text-sm font-bold transition-colors"
+							th:classappend="${currentQueueId == 1110} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
+							초고속
+						</a>
+						<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(queueId=0)}"
+							class="px-4 py-2 rounded text-sm font-bold transition-colors"
+							th:classappend="${currentQueueId == 0} ? 'bg-blue-600 text-white' : 'bg-[#1c2127] text-gray-400 hover:bg-[#2d353f]'">
+							전체
+						</a>
+					</div>
+
+					<!-- Match Summary -->
+					<section class="bg-[#1c2127] rounded-lg p-6 grid grid-cols-12 gap-8 border border-gray-800">
+						<div class="col-span-5 border-r border-gray-800 pr-4">
+							<div class="flex justify-between items-end mb-4">
+								<h3 class="text-xs text-gray-400 font-bold uppercase tracking-wider">최근 20게임 등수 분포</h3>
+								<span class="text-xl font-black text-yellow-500">
+									<span th:text="${#numbers.formatDecimal(profile.recentAvgPlacement, 1, 2)}"></span>
+									<small class="text-[10px] text-gray-500 font-normal">평균</small>
+								</span>
+							</div>
+							<canvas id="rankChart" height="120"></canvas>
+							<!-- 최근 20경기 등수 뱃지 (10개씩 정렬) -->
+							<div class="grid grid-cols-10 gap-1 mt-4">
+								<div th:each="placement : ${profile.recentPlacements}" th:text="${placement}"
+									class="w-6 h-6 rounded flex items-center justify-center text-[11px] font-bold text-white shadow-sm"
+									th:classappend="${placement == 1} ? 'bg-[#1fb27c]' : 
 												(${placement <= 4} ? 'bg-[#3d6ad6]' : 'bg-[#adb2bb]')">
+								</div>
 							</div>
 						</div>
-					</div>
-					<div class="col-span-3 flex flex-col justify-center items-center">
-						<p class="text-xs text-gray-500 uppercase font-bold">TOP 4 확률</p>
-						<h2 class="text-4xl font-black text-green-500 my-1" th:text="${#numbers.formatDecimal(profile.recentTop4Rate, 1, 1)} + '%'"></h2>
-						<div class="mt-4 pt-4 border-t border-gray-800 w-full text-center">
-							<p class="text-[10px] text-gray-500 uppercase" th:text="'승률 ' + ${#numbers.formatDecimal(profile.recentWinRate, 1, 1)} + '%'"></p>
-						</div>
-					</div>
-					<!-- LP 변화 추이 -->
-					<div class="col-span-4 border-l border-gray-800 pl-4 flex flex-col justify-center">
-						<h3 class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">LP 변화 추이</h3>
-						<div class="relative h-[120px] w-full">
-							<canvas id="lpChart"></canvas>
-						</div>
-					</div>
-				</section>
-				<!-- 최근 경기 정보 -->
-				<section class="space-y-3">
-					<h3 class="font-bold text-sm text-gray-300">최근 경기 정보</h3>
-					<!-- 전적 정보 컴포넌트 -->
-					<div th:each="match, iter : ${matches}" class="mb-4 rounded-lg border transition-all"
-						th:with="myP=${match.info.participants.?[puuid == #root.profile.puuid][0]}" 
-						th:classappend="${myP.placement <= 4} ? 'bg-blue-900/10 border-blue-900/30' : 'bg-[#1c2127] border-gray-800'">
-						
-						<!-- 상단 요약 바 (클릭 가능 영역) -->
-						<div class="flex p-4 items-center cursor-pointer hover:bg-white/5 relative" th:onclick="'toggleDetail(' + ${iter.index} + ')'">
-							<div class="flex flex-col justify-center items-center w-24 border-r border-gray-800/50 pr-4">
-								<span class="text-3xl font-black italic" th:text="'#' + ${myP.placement}" th:classappend="${myP.placement <= 4} ? 'text-blue-400' : 'text-gray-400'"></span>
-								<div class="mt-1 text-[10px] font-bold" 
-									 th:text="${match.info.game_mode}"
-									 th:classappend="${match.info.game_mode == '랭크'} ? 'text-blue-500' : 'text-gray-500'"></div>
-								<div class="mt-1 text-[11px] text-gray-500" th:text="'Lv. ' + ${myP.level}"></div>
+						<div class="col-span-3 flex flex-col justify-center items-center">
+							<p class="text-xs text-gray-500 uppercase font-bold">TOP 4 확률</p>
+							<h2 class="text-4xl font-black text-green-500 my-1"
+								th:text="${#numbers.formatDecimal(profile.recentTop4Rate, 1, 1)} + '%'"></h2>
+							<div class="mt-4 pt-4 border-t border-gray-800 w-full text-center">
+								<p class="text-[10px] text-gray-500 uppercase"
+									th:text="'승률 ' + ${#numbers.formatDecimal(profile.recentWinRate, 1, 1)} + '%'"></p>
 							</div>
-							
-							<!-- 요약 바: 내 덱 정보 -->
-							<div class="flex-1 px-6">
-								<div class="flex flex-wrap gap-3">
-									<div th:each="unit : ${myP.units}" class="flex flex-col items-center">
-										<div class="relative w-10 h-10 group">
-											<div class="w-full h-full bg-gray-800 rounded border overflow-hidden"
-												th:classappend="${unit.cost >= 6} ? 'border-yellow-500' : 
+						</div>
+						<!-- LP 변화 추이 -->
+						<div class="col-span-4 border-l border-gray-800 pl-4 flex flex-col justify-center">
+							<h3 class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">LP 변화 추이</h3>
+							<div class="relative h-[120px] w-full">
+								<canvas id="lpChart"></canvas>
+							</div>
+						</div>
+					</section>
+					<!-- 최근 경기 정보 -->
+					<section class="space-y-3">
+						<h3 class="font-bold text-sm text-gray-300">최근 경기 정보</h3>
+						<!-- 전적 정보 컴포넌트 -->
+						<div th:each="match, iter : ${matches}" class="mb-4 rounded-lg border transition-all"
+							th:with="myP=${match.info.participants.?[puuid == #root.profile.puuid][0]}"
+							th:classappend="${myP.placement <= 4} ? 'bg-blue-900/10 border-blue-900/30' : 'bg-[#1c2127] border-gray-800'">
+
+							<!-- 상단 요약 바 (클릭 가능 영역) -->
+							<div class="flex p-4 items-center cursor-pointer hover:bg-white/5 relative"
+								th:onclick="'toggleDetail(' + ${iter.index} + ')'">
+								<div
+									class="flex flex-col justify-center items-center w-24 border-r border-gray-800/50 pr-4">
+									<span class="text-3xl font-black italic" th:text="'#' + ${myP.placement}"
+										th:classappend="${myP.placement <= 4} ? 'text-blue-400' : 'text-gray-400'"></span>
+									<div class="mt-1 text-[10px] font-bold" th:text="${match.info.game_mode}"
+										th:classappend="${match.info.game_mode == '랭크'} ? 'text-blue-500' : 'text-gray-500'">
+									</div>
+									<div class="mt-1 text-[11px] text-gray-500" th:text="'Lv. ' + ${myP.level}"></div>
+								</div>
+
+								<!-- 요약 바: 내 덱 정보 -->
+								<div class="flex-1 px-6">
+									<div class="flex flex-wrap gap-3">
+										<div th:each="unit : ${myP.units}" class="flex flex-col items-center">
+											<div class="relative w-10 h-10 group">
+												<div class="w-full h-full bg-gray-800 rounded border overflow-hidden"
+													th:classappend="${unit.cost >= 6} ? 'border-yellow-500' : 
 																(${unit.cost == 4} ? 'border-purple-500' : 
 																(${unit.cost == 2} ? 'border-[#00b0f0]' : 
 																(${unit.cost == 1} ? 'border-[#11b288]' : 'border-[#808080]')))">
-												<img th:src="${unit.championImg}" loading="lazy" class="w-full h-full object-cover object-[90%_50%]">
+													<img th:src="${unit.championImg}" loading="lazy"
+														class="w-full h-full object-cover object-[90%_50%]">
+												</div>
+												<!-- 챔피언 ★ -->
+												<div class="absolute -top-2 left-0 right-0 flex justify-center text-[8px] text-yellow-400 drop-shadow-md"
+													th:if="${unit.star > 1}">
+													<span th:each="i : ${#numbers.sequence(1, unit.star)}">★</span>
+												</div>
+												<!-- 유닛 툴팁 (잘림 방지 z-index) -->
+												<div
+													class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100]">
+													<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap shadow-2xl"
+														th:text="${unit.championName}"></div>
+												</div>
 											</div>
-											<!-- 챔피언 ★ -->
-											<div class="absolute -top-2 left-0 right-0 flex justify-center text-[8px] text-yellow-400 drop-shadow-md" th:if="${unit.star > 1}">
-												<span th:each="i : ${#numbers.sequence(1, unit.star)}">★</span>
-											</div>
-											<!-- 유닛 툴팁 (잘림 방지 z-index) -->
-											<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100]">
-												<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap shadow-2xl" th:text="${unit.championName}"></div>
-											</div>
-										</div>
-										<!-- 미니 아이템 아이콘 -->
-										<div class="flex gap-0.5 mt-1">
-											<div th:each="itemUrl, itemIter : ${unit.itemImgUrls}" class="relative w-3 h-3 bg-gray-900 rounded-sm overflow-visible group/item">
-												<img th:src="${itemUrl}" loading="lazy" class="w-full h-full object-cover rounded-sm border border-gray-700">
-												<!-- 아이템 툴팁 -->
-												<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/item:block z-[110]">
-													<div class="bg-gray-900 text-white text-[9px] px-2 py-1 rounded border border-gray-600 whitespace-nowrap shadow-2xl" th:text="${unit.items[itemIter.index]}"></div>
+											<!-- 미니 아이템 아이콘 -->
+											<div class="flex gap-0.5 mt-1">
+												<div th:each="itemUrl, itemIter : ${unit.itemImgUrls}"
+													class="relative w-3 h-3 bg-gray-900 rounded-sm overflow-visible group/item">
+													<img th:src="${itemUrl}" loading="lazy"
+														class="w-full h-full object-cover rounded-sm border border-gray-700">
+													<!-- 아이템 툴팁 -->
+													<div
+														class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/item:block z-[110]">
+														<div class="bg-gray-900 text-white text-[9px] px-2 py-1 rounded border border-gray-600 whitespace-nowrap shadow-2xl"
+															th:text="${unit.items[itemIter.index]}"></div>
+													</div>
 												</div>
 											</div>
 										</div>
 									</div>
-								</div>
-								<div class="mt-3 flex flex-wrap gap-1.5">
-									<div th:each="trait : ${myP.traits}" class="relative w-6 h-6 group">
-										<img th:src="${trait.bgUrl}" loading="lazy" class="absolute inset-0 w-full h-full" />
-										<img th:src="${trait.iconUrl}" loading="lazy" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[14px] h-[14px] invert brightness-200">
-										<!-- 시너지 툴팁 -->
-										<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-[100]">
-											<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap" th:text="${trait.name}"></div>
+									<div class="mt-3 flex flex-wrap gap-1.5">
+										<div th:each="trait : ${myP.traits}" class="relative w-6 h-6 group">
+											<img th:src="${trait.bgUrl}" loading="lazy"
+												class="absolute inset-0 w-full h-full" />
+											<img th:src="${trait.iconUrl}" loading="lazy"
+												class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[14px] h-[14px] invert brightness-200">
+											<!-- 시너지 툴팁 -->
+											<div
+												class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-[100]">
+												<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap"
+													th:text="${trait.name}"></div>
+											</div>
 										</div>
 									</div>
 								</div>
-							</div>
 
-							<!-- 날짜 및 화살표 -->
-							<div class="flex flex-col items-end gap-2 pr-2">
-								<div class="text-yellow-500/80 font-mono text-[11px] mb-1">
-									<span class="mr-1">💰</span><span th:text="${myP.gold_left}"></span>
+								<!-- 날짜 및 화살표 -->
+								<div class="flex flex-col items-end gap-2 pr-2">
+									<div class="text-yellow-500/80 font-mono text-[11px] mb-1">
+										<span class="mr-1">💰</span><span th:text="${myP.gold_left}"></span>
+									</div>
+									<div class="text-gray-500 text-[11px] italic"
+										th:text="${#dates.format(new java.util.Date(match.info.game_datetime), 'MM-dd')}">
+									</div>
+									<svg th:id="'arrow-' + ${iter.index}" xmlns="http://www.w3.org/2000/svg"
+										class="h-5 w-5 text-gray-600 transition-transform" fill="none"
+										viewBox="0 0 24 24" stroke="currentColor">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+											d="M19 9l-7 7-7-7" />
+									</svg>
 								</div>
-								<div class="text-gray-500 text-[11px] italic" th:text="${#dates.format(new java.util.Date(match.info.game_datetime), 'MM-dd')}"></div>
-								<svg th:id="'arrow-' + ${iter.index}" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-								</svg>
 							</div>
-						</div>
 
-						<!-- 상세보기 영역 (1~8등 정렬) -->
-						<div th:id="'detail-' + ${iter.index}" class="hidden border-t border-gray-800 bg-black/20 p-4 space-y-1">
-							<div th:each="p, pIter : ${match.info.participants}" 
-								 class="flex items-center gap-4 p-2 rounded hover:bg-white/5 transition-colors text-[11px]"
-								 th:classappend="(${p.puuid == profile.puuid} ? 'bg-blue-500/10 border border-blue-500/20' : '') + 
+							<!-- 상세보기 영역 (1~8등 정렬) -->
+							<div th:id="'detail-' + ${iter.index}"
+								class="hidden border-t border-gray-800 bg-black/20 p-4 space-y-1">
+								<div th:each="p, pIter : ${match.info.participants}"
+									class="flex items-center gap-4 p-2 rounded hover:bg-white/5 transition-colors text-[11px]"
+									th:classappend="(${p.puuid == profile.puuid} ? 'bg-blue-500/10 border border-blue-500/20' : '') + 
 												(${match.info.queue_id == 1160 and pIter.index % 2 == 1 and !pIter.last} ? ' mb-3 border-b border-gray-800/50 pb-3' : '')">
-								
-								<!-- 등수 표시 -->
-								<div class="w-8 font-black text-center text-lg" th:text="'#' + ${p.placement}" 
-									 th:classappend="${p.placement == 1} ? 'text-[#1fb27c]' : 
+
+									<!-- 등수 표시 -->
+									<div class="w-8 font-black text-center text-lg" th:text="'#' + ${p.placement}"
+										th:classappend="${p.placement == 1} ? 'text-[#1fb27c]' : 
 													(${match.info.queue_id == 1160} ? (${p.placement == 2} ? 'text-[#3d6ad6]' : 'text-gray-500') : 
 													(${p.placement <= 4} ? 'text-[#3d6ad6]' : 'text-gray-500'))"></div>
-								
-								<div class="w-32 flex items-center gap-2">
-									<div class="w-5 h-5 bg-gray-800 rounded-full overflow-hidden border border-gray-700 shrink-0">
-										<img th:if="${p.companion != null}" loading="lazy" th:src="${p.companion.companionImg}" class="w-full h-full scale-125">
+
+									<div class="w-32 flex items-center gap-2">
+										<div
+											class="w-5 h-5 bg-gray-800 rounded-full overflow-hidden border border-gray-700 shrink-0">
+											<img th:if="${p.companion != null}" loading="lazy"
+												th:src="${p.companion.companionImg}" class="w-full h-full scale-125">
+										</div>
+										<div class="truncate font-bold text-gray-300" th:text="${p.riotIdGameName}">소환사명
+										</div>
 									</div>
-									<div class="truncate font-bold text-gray-300" th:text="${p.riotIdGameName}">소환사명</div>
-								</div>
-								
-								<div class="flex-1 flex flex-wrap gap-2">
-									<div th:each="u : ${p.units}" class="flex flex-col items-center">
-										<div class="relative group w-8 h-8">
-											<!-- 유닛 이미지 -->
-											<div class="w-8 h-8 rounded border overflow-hidden"
-												 th:classappend="${u.cost >= 6} ? 'border-yellow-500' : 
+
+									<div class="flex-1 flex flex-wrap gap-2">
+										<div th:each="u : ${p.units}" class="flex flex-col items-center">
+											<div class="relative group w-8 h-8">
+												<!-- 유닛 이미지 -->
+												<div class="w-8 h-8 rounded border overflow-hidden" th:classappend="${u.cost >= 6} ? 'border-yellow-500' : 
 																(${u.cost == 4} ? 'border-purple-500' : 
 																(${u.cost == 2} ? 'border-[#00b0f0]' : 
 																(${u.cost == 1} ? 'border-[#11b288]' : 'border-[#808080]')))">
-												<img th:src="${u.championImg}" loading="lazy" class="w-full h-full object-cover object-[right_top]">
+													<img th:src="${u.championImg}" loading="lazy"
+														class="w-full h-full object-cover object-[right_top]">
+												</div>
+												<!-- 별 표시 -->
+												<div class="absolute -top-1.5 left-0 right-0 flex justify-center text-[6px] text-yellow-400 drop-shadow-md"
+													th:if="${u.star > 1}">
+													<span th:each="i : ${#numbers.sequence(1, u.star)}">★</span>
+												</div>
+												<!-- 유닛 커스텀 툴팁 -->
+												<div
+													class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100]">
+													<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap shadow-2xl"
+														th:text="${u.championName}"></div>
+												</div>
 											</div>
-											<!-- 별 표시 -->
-											<div class="absolute -top-1.5 left-0 right-0 flex justify-center text-[6px] text-yellow-400 drop-shadow-md" th:if="${u.star > 1}">
-												<span th:each="i : ${#numbers.sequence(1, u.star)}">★</span>
-											</div>
-											<!-- 유닛 커스텀 툴팁 -->
-											<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100]">
-												<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap shadow-2xl" th:text="${u.championName}"></div>
-											</div>
-										</div>
-										<!-- 아이템 표시 (이미지 아래로 이동) -->
-										<div class="flex gap-0.5 mt-0.5">
-											<div th:each="itemUrl, itemIter : ${u.itemImgUrls}" class="relative w-2.5 h-2.5 bg-black rounded-sm border-[0.5px] border-gray-600 overflow-visible group/item">
-												<img th:src="${itemUrl}" loading="lazy" class="w-full h-full object-cover">
-												<!-- 아이템 커스텀 툴팁 -->
-												<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/item:block z-[120]">
-													<div class="bg-black text-white text-[8px] px-1.5 py-0.5 rounded border border-gray-700 whitespace-nowrap shadow-2xl" th:text="${u.items[itemIter.index]}"></div>
+											<!-- 아이템 표시 (이미지 아래로 이동) -->
+											<div class="flex gap-0.5 mt-0.5">
+												<div th:each="itemUrl, itemIter : ${u.itemImgUrls}"
+													class="relative w-2.5 h-2.5 bg-black rounded-sm border-[0.5px] border-gray-600 overflow-visible group/item">
+													<img th:src="${itemUrl}" loading="lazy"
+														class="w-full h-full object-cover">
+													<!-- 아이템 커스텀 툴팁 -->
+													<div
+														class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/item:block z-[120]">
+														<div class="bg-black text-white text-[8px] px-1.5 py-0.5 rounded border border-gray-700 whitespace-nowrap shadow-2xl"
+															th:text="${u.items[itemIter.index]}"></div>
+													</div>
 												</div>
 											</div>
 										</div>
 									</div>
-								</div>
 
-								<div class="w-32 flex flex-wrap gap-1 justify-end">
-									<div th:each="t : ${p.traits}" class="relative w-5 h-5 group">
-										<img th:src="${t.bgUrl}" loading="lazy" class="absolute inset-0 w-full h-full" />
-										<img th:src="${t.iconUrl}" loading="lazy" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[10px] h-[10px] invert brightness-200">
-										<!-- 시너지 커스텀 툴팁 -->
-										<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-50">
-											<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap shadow-xl" th:text="${t.name}"></div>
+									<div class="w-32 flex flex-wrap gap-1 justify-end">
+										<div th:each="t : ${p.traits}" class="relative w-5 h-5 group">
+											<img th:src="${t.bgUrl}" loading="lazy"
+												class="absolute inset-0 w-full h-full" />
+											<img th:src="${t.iconUrl}" loading="lazy"
+												class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[10px] h-[10px] invert brightness-200">
+											<!-- 시너지 커스텀 툴팁 -->
+											<div
+												class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-50">
+												<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap shadow-xl"
+													th:text="${t.name}"></div>
+											</div>
 										</div>
 									</div>
 								</div>
 							</div>
 						</div>
-					</div>
 
-					<script>
-						function toggleDetail(index) {
-							const detail = document.getElementById('detail-' + index);
-							const arrow = document.getElementById('arrow-' + index);
-							if (detail.classList.contains('hidden')) {
-								detail.classList.remove('hidden');
-								arrow.style.transform = 'rotate(180deg)';
-							} else {
-								detail.classList.add('hidden');
-								arrow.style.transform = 'rotate(0deg)';
-							}
-						}
-					</script>
-				</section>
-
-				<!-- 더 보기 버튼 -->
-				<div th:if="${hasNext or profile.collectedCount < profile.totalCount}" class="mt-6 flex justify-center pb-10">
-					<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(page=${currentPage + 1}, queueId=${currentQueueId})}"
-					   class="bg-[#1c2127] hover:bg-[#2d353f] text-gray-300 font-bold py-3 px-10 rounded-lg border border-gray-800 transition-all">
-						<span th:text="${hasNext} ? '과거 전적 더 보기' : '전적 수집 대기 중 (' + ${profile.collectedCount} + '/' + ${profile.totalCount} + ')'"></span>
-					</a>
-				</div>
-			</main>
-		</div>
-
-		<script>
-			const date = new Date(1764687600000); // JS는 밀리초 단위 사용
-			console.log(date.toLocaleString());
-		</script>
-		<script th:inline="javascript">
-			/*<![CDATA[*/
-			const rankCounts = /*[[${profile.rankCounts}]]*/ [0,0,0,0,0,0,0,0];
-			const lpHistory = /*[[${profile.lpHistory}]]*/ [];
-			const realLps = /*[[${profile.realLpHistory}]]*/ []; // [추가] 툴팁용 실제 LP
-			const lpLabels = /*[[${profile.lpHistoryLabels}]]*/ [];
-			const lpTiers = /*[[${profile.lpHistoryTiers}]]*/ [];
-
-			const ctx = document.getElementById('rankChart').getContext('2d');
-			new Chart(ctx, {
-				type: 'bar',
-				data: {
-					labels: ['1', '2', '3', '4', '5', '6', '7', '8'],
-					datasets: [{
-						data: rankCounts,
-						backgroundColor: (c) => c.index < 4 ? '#3b82f6' : '#4b5563',
-						borderRadius: 3,
-						barPercentage: 0.7
-					}]
-				},
-				options: {
-					plugins: { legend: { display: false } },
-					scales: {
-						y: { display: false },
-						x: { 
-							grid: { display: false },
-							ticks: { color: '#6b7280', font: { size: 10 } }
-						}
-					}
-				}
-			});
-
-			const lpCtx = document.getElementById('lpChart').getContext('2d');
-			
-			// 데이터가 없을 경우를 대비한 최소값/최대값 계산
-			const minLp = lpHistory.length > 0 ? Math.min(...lpHistory) : 0;
-			const maxLp = lpHistory.length > 0 ? Math.max(...lpHistory) : 100;
-
-			new Chart(lpCtx, {
-				type: 'line',
-				data: {
-					labels: lpLabels,
-					datasets: [{
-						data: lpHistory,
-						borderColor: '#3b82f6',
-						borderWidth: 2,
-						backgroundColor: 'rgba(59, 130, 246, 0.1)',
-						fill: true,
-						tension: 0.3,
-						pointRadius: 3,
-						pointBackgroundColor: '#3b82f6',
-						pointHitRadius: 10
-					}]
-				},
-				options: {
-					responsive: true,
-					maintainAspectRatio: false, // 컨테이너 높이에 맞춤
-					plugins: { 
-						legend: { display: false },
-						tooltip: {
-							backgroundColor: '#1c2127',
-							titleColor: '#9ca3af',
-							bodyColor: '#ffffff',
-							borderColor: '#3b82f6',
-							borderWidth: 1,
-							displayColors: false,
-							padding: 10,
-							callbacks: {
-								title: function(context) {
-									return lpLabels[context[0].dataIndex];
-								},
-								label: function(context) {
-									const tier = lpTiers[context.dataIndex] || '';
-									// [수정] 그래프 값(환산점수) 대신 실제 LP 표시
-									const realLp = realLps[context.dataIndex] !== undefined ? realLps[context.dataIndex] : context.parsed.y;
-									return tier + ' (' + realLp + ' LP)';
+						<script>
+							function toggleDetail(index) {
+								const detail = document.getElementById('detail-' + index);
+								const arrow = document.getElementById('arrow-' + index);
+								if (detail.classList.contains('hidden')) {
+									detail.classList.remove('hidden');
+									arrow.style.transform = 'rotate(180deg)';
+								} else {
+									detail.classList.add('hidden');
+									arrow.style.transform = 'rotate(0deg)';
 								}
 							}
-						}
+						</script>
+					</section>
+
+					<!-- 더 보기 버튼 -->
+					<div th:if="${hasNext or profile.collectedCount < profile.totalCount}"
+						class="mt-6 flex justify-center pb-10">
+						<a th:href="@{'/summoner/' + ${server} + '/' + ${profile.summonerName} + '/' + ${profile.tagLine}(page=${currentPage + 1}, queueId=${currentQueueId})}"
+							class="bg-[#1c2127] hover:bg-[#2d353f] text-gray-300 font-bold py-3 px-10 rounded-lg border border-gray-800 transition-all">
+							<span
+								th:text="${hasNext} ? '과거 전적 더 보기' : '전적 수집 대기 중 (' + ${profile.collectedCount} + '/' + ${profile.totalCount} + ')'"></span>
+						</a>
+					</div>
+				</main>
+			</div>
+
+			<script>
+				const date = new Date(1764687600000); // JS는 밀리초 단위 사용
+				console.log(date.toLocaleString());
+			</script>
+			<script th:inline="javascript">
+				/*<![CDATA[*/
+				const rankCounts = /*[[${profile.rankCounts}]]*/[0, 0, 0, 0, 0, 0, 0, 0];
+				const lpHistory = /*[[${profile.lpHistory}]]*/[];
+				const realLps = /*[[${profile.realLpHistory}]]*/[]; // [추가] 툴팁용 실제 LP
+				const lpLabels = /*[[${profile.lpHistoryLabels}]]*/[];
+				const lpTiers = /*[[${profile.lpHistoryTiers}]]*/[];
+
+				const ctx = document.getElementById('rankChart').getContext('2d');
+				new Chart(ctx, {
+					type: 'bar',
+					data: {
+						labels: ['1', '2', '3', '4', '5', '6', '7', '8'],
+						datasets: [{
+							data: rankCounts,
+							backgroundColor: (c) => c.index < 4 ? '#3b82f6' : '#4b5563',
+							borderRadius: 3,
+							barPercentage: 0.7
+						}]
 					},
-					scales: {
-						y: { 
-							suggestedMin: minLp - 50,
-							suggestedMax: maxLp + 50,
-							grid: { color: '#2d353f', drawTicks: false },
-							ticks: { 
-								display: false // [수정] 환산 점수 노출 방지를 위해 Y축 라벨 숨김
+					options: {
+						plugins: { legend: { display: false } },
+						scales: {
+							y: { display: false },
+							x: {
+								grid: { display: false },
+								ticks: { color: '#6b7280', font: { size: 10 } }
 							}
-						},
-						x: { 
-							grid: { display: false },
-							ticks: { color: '#6b7280', font: { size: 9 } }
 						}
 					}
-				}
-			});
-			/*]]>*/
-		</script>
-	</main>
-</div>
+				});
+
+				const lpCtx = document.getElementById('lpChart').getContext('2d');
+
+				// 데이터가 없을 경우를 대비한 최소값/최대값 계산
+				const minLp = lpHistory.length > 0 ? Math.min(...lpHistory) : 0;
+				const maxLp = lpHistory.length > 0 ? Math.max(...lpHistory) : 100;
+
+				new Chart(lpCtx, {
+					type: 'line',
+					data: {
+						labels: lpLabels,
+						datasets: [{
+							data: lpHistory,
+							borderColor: '#3b82f6',
+							borderWidth: 2,
+							backgroundColor: 'rgba(59, 130, 246, 0.1)',
+							fill: true,
+							tension: 0.3,
+							pointRadius: 3,
+							pointBackgroundColor: '#3b82f6',
+							pointHitRadius: 10
+						}]
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false, // 컨테이너 높이에 맞춤
+						plugins: {
+							legend: { display: false },
+							tooltip: {
+								backgroundColor: '#1c2127',
+								titleColor: '#9ca3af',
+								bodyColor: '#ffffff',
+								borderColor: '#3b82f6',
+								borderWidth: 1,
+								displayColors: false,
+								padding: 10,
+								callbacks: {
+									title: function (context) {
+										return lpLabels[context[0].dataIndex];
+									},
+									label: function (context) {
+										const tier = lpTiers[context.dataIndex] || '';
+										// [수정] 그래프 값(환산점수) 대신 실제 LP 표시
+										const realLp = realLps[context.dataIndex] !== undefined ? realLps[context.dataIndex] : context.parsed.y;
+										return tier + ' (' + realLp + ' LP)';
+									}
+								}
+							}
+						},
+						scales: {
+							y: {
+								suggestedMin: minLp - 50,
+								suggestedMax: maxLp + 50,
+								grid: { color: '#2d353f', drawTicks: false },
+								ticks: {
+									display: false // [수정] 환산 점수 노출 방지를 위해 Y축 라벨 숨김
+								}
+							},
+							x: {
+								grid: { display: false },
+								ticks: { color: '#6b7280', font: { size: 9 } }
+							}
+						}
+					}
+				});
+				/*]]>*/
+			</script>
+		</main>
+	</div>
 </body>
+
 </html>

@@ -70,7 +70,7 @@ public class MatchServiceImp implements MatchService {
         headers.set("X-Riot-Token", apiKey);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        long seasonStartEpoch = 1764687600L; // 2025년 12월 3일 기준
+        long seasonStartEpoch = 1776178800L; // 2026년 4월 15일 기준
 
         try {
             // startTime을 추가하여 전시즌 데이터 유입 방지

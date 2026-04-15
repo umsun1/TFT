@@ -107,11 +107,11 @@ public class MatchFetchService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processSummoner(RedisQueueService.QueueTask queue) {
-        log.info("Fetching ALL match IDs for PUUID={} since Season Start (Dec 3)", queue.id);
+        log.info("Fetching ALL match IDs for PUUID={} since Season Start (Apr 15)", queue.id);
         
         java.util.List<String> allMatchIds = new java.util.ArrayList<>();
         int start = 0;
-        long seasonStartEpoch = 1764687600L; // 2025년 12월 3일 기준
+        long seasonStartEpoch = 1776178800L; // 2026년 4월 15일 기준
 
         // 1. Riot API에서 매치 ID 리스트 수집
         while (true) {
