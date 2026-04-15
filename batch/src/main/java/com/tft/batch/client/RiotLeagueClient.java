@@ -62,6 +62,30 @@ public class RiotLeagueClient {
         }
     }
 
+    /**
+     * 다이아몬드 이하 티어의 유저 목록을 조회합니다.
+     * @param tier 예: "EMERALD"
+     * @param division 예: "I"
+     * @return 유저 목록
+     */
+    public List<TftLeagueEntryDto> getLeagueEntries(String tier, String division) {
+        String url = "https://kr.api.riotgames.com/tft/league/v1/entries/" + tier + "/" + division + "?api_key=" + apiKey;
+        log.info("Calling Riot API: {}", url.replace(apiKey, "REDACTED"));
+        try {
+            ResponseEntity<List<TftLeagueEntryDto>> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.GET,
+                            null,
+                            new ParameterizedTypeReference<List<TftLeagueEntryDto>>() {}
+                    );
+            return response.getBody();
+        } catch (Exception e) {
+            log.error("Error fetching league entries for {} {}: {}", tier, division, e.getMessage());
+            return null;
+        }
+    }
+
     public TftLeagueEntryDto getTftLeagueByPuuid(String puuid) {
         String url = "https://kr.api.riotgames.com/tft/league/v1/by-puuid/" + puuid + "?api_key=" + apiKey;
 

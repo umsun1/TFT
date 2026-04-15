@@ -39,6 +39,9 @@ public class LpUpdateService {
     }
 
     private void processPuuid(String puuid) {
+        // API Rate Limit 보존을 위한 미세 대기 (1.5초)
+        try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
+
         // API 호출
         TftLeagueEntryDto league = riotLeagueClient.getTftLeagueByPuuid(puuid);
         if (league == null) return;
@@ -46,6 +49,8 @@ public class LpUpdateService {
         LpHistory lastRecord = lpHistoryRepository.findTopByPuuidOrderByCreatedAtDesc(puuid);
 
         boolean needUpdate = false;
+        int iconId = (lastRecord != null && lastRecord.getProfileIconId() > 0) ? lastRecord.getProfileIconId() : 0;
+
         // DB 기록 없는 유저(신규 유저)인 경우 바로 저장
         if (lastRecord == null) {
             needUpdate = true;
@@ -55,6 +60,14 @@ public class LpUpdateService {
             if (lastRecord.getLp() != league.getLeaguePoints() || !lastRecord.getTier().equals(league.getTier())) {
                 needUpdate = true;
             }
+            // 기존 데이터 마이그레이션: 승패 정보가 0이거나 아이콘 정보가 없을 때 최신화
+            if (lastRecord.getWins() == 0 && league.getWins() > 0) needUpdate = true;
+        }
+
+        // 아이콘 정보가 없는 경우 추가 조회
+        if (iconId == 0) {
+            com.tft.batch.client.dto.TftSummonerDto s = riotLeagueClient.getTftSummonerByPuuid(puuid);
+            if (s != null) iconId = s.getProfileIconId();
         }
 
         // 저장용 객체 만들어서 DB에 추가
@@ -64,6 +77,9 @@ public class LpUpdateService {
                     .tier(league.getTier()) //CHALLENGER, ..., IRON
                     .rank_str(league.getRank()) //I~IV
                     .lp(league.getLeaguePoints()) // 0~
+                    .wins(league.getWins())
+                    .losses(league.getLosses())
+                    .profileIconId(iconId)
                     .createdAt(LocalDateTime.now())
                     .build();
             

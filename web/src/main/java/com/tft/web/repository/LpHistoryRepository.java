@@ -18,14 +18,17 @@ public interface LpHistoryRepository extends JpaRepository<LpHistory, Long> {
         FROM (
             SELECT *, ROW_NUMBER() OVER (PARTITION BY puuid ORDER BY created_at DESC) as rn
             FROM lp_history
-            WHERE tier IN ('CHALLENGER', 'GRANDMASTER')
+            WHERE created_at >= '2026-04-15 00:00:00'
         ) t
         WHERE t.rn = 1
         ORDER BY 
             CASE tier
                 WHEN 'CHALLENGER' THEN 1
                 WHEN 'GRANDMASTER' THEN 2
-                ELSE 3
+                WHEN 'MASTER' THEN 3
+                WHEN 'DIAMOND' THEN 4
+                WHEN 'EMERALD' THEN 5
+                ELSE 6
             END,
             lp DESC
         LIMIT 300

@@ -1,6 +1,7 @@
 package com.tft.batch.service;
 
 import com.tft.batch.client.RiotLeagueClient;
+import com.tft.batch.client.dto.TftLeagueEntryDto;
 import com.tft.batch.client.dto.TftLeagueItemDto;
 import com.tft.batch.client.dto.TftLeagueListDto;
 import lombok.RequiredArgsConstructor;
@@ -39,19 +40,38 @@ public class HighTierCollectorService {
         }
 
         // 3. Master
+        int masterCount = 0;
         try {
-            // collectLeague(riotLeagueClient.getMasterLeague(), "MASTER", 50);
+            TftLeagueListDto masterLeague = riotLeagueClient.getMasterLeague();
+            if (masterLeague != null && masterLeague.getEntries() != null && !masterLeague.getEntries().isEmpty()) {
+                masterCount = collectLeague(masterLeague, "MASTER", 50);
+            }
         } catch (Exception e) {
             log.error("Failed to collect Master league: {}", e.getMessage());
+        }
+
+        // 4. 시즌 초기 대응: 고티어 유저가 너무 적을 경우 에메랄드 I 유저 수집 (임시)
+        if (masterCount < 10) {
+            log.info("Very few Master players found. Collecting Emerald I players for season start...");
+            try {
+                List<TftLeagueEntryDto> emeraldEntries = riotLeagueClient.getLeagueEntries("EMERALD", "I");
+                if (emeraldEntries != null && !emeraldEntries.isEmpty()) {
+                    // 상위 일부만 수집 (너무 많으면 API 할당량 초과 위험)
+                    List<TftLeagueEntryDto> limitedEntries = emeraldEntries.subList(0, Math.min(emeraldEntries.size(), 200));
+                    collectLeagueEntries(limitedEntries, "EMERALD", 50);
+                }
+            } catch (Exception e) {
+                log.error("Failed to collect Emerald I entries: {}", e.getMessage());
+            }
         }
 
         log.info("High Tier player collection finished.");
     }
 
-    private void collectLeague(TftLeagueListDto league, String tierName, int priority) {
+    private int collectLeague(TftLeagueListDto league, String tierName, int priority) {
         if (league == null || league.getEntries() == null) {
             log.warn("League data is null or empty for {}", tierName);
-            return;
+            return 0;
         }
 
         if (!league.getEntries().isEmpty()) {
@@ -60,24 +80,53 @@ public class HighTierCollectorService {
 
         int count = 0;
         for (TftLeagueItemDto entry : league.getEntries()) {
-            // Case 1: PUUID가 있는 경우 (바로 랭킹 등록 및 매치 수집)
-            if (entry.getPuuid() != null) {
-                redisQueueService.pushTask(entry.getPuuid(), "SUMMONER", priority);
-                count++;
-                
-                try {
-                    saveLpHistory(entry, tierName);
-                } catch (Exception e) {
-                    log.error("Failed to save LP history for {}: {}", entry.getPuuid(), e.getMessage());
-                }
-            } 
-            // Case 2: PUUID가 없고 SummonerID만 있는 경우 (ID 변환 대기열에 등록)
-            else if (entry.getSummonerId() != null) {
-                redisQueueService.pushTask(entry.getSummonerId(), "SUMMONER_ID", priority);
+            if (processEntry(entry, tierName, priority)) {
                 count++;
             }
         }
         log.info("Added {} new players to queue from {}", count, tierName);
+        return count;
+    }
+
+    /**
+     * 리스트 형태(다이아몬드 이하)의 엔트리를 처리합니다.
+     */
+    private void collectLeagueEntries(List<TftLeagueEntryDto> entries, String tierName, int priority) {
+        int count = 0;
+        for (TftLeagueEntryDto entry : entries) {
+            // TftLeagueEntryDto를 TftLeagueItemDto와 호환되게 변환하거나 직접 처리
+            TftLeagueItemDto item = new TftLeagueItemDto();
+            item.setSummonerId(entry.getSummonerId());
+            item.setLeaguePoints(entry.getLeaguePoints());
+            item.setWins(entry.getWins());
+            item.setLosses(entry.getLosses());
+            item.setRank(entry.getRank());
+            // PUUID는 Entries API 결과에 없을 수 있으므로 ID 변환 큐를 타게 됨
+            
+            if (processEntry(item, tierName, priority)) {
+                count++;
+            }
+        }
+        log.info("Added {} players to queue from {} I entries", count, tierName);
+    }
+
+    private boolean processEntry(TftLeagueItemDto entry, String tierName, int priority) {
+        // Case 1: PUUID가 있는 경우
+        if (entry.getPuuid() != null && !entry.getPuuid().isEmpty()) {
+            redisQueueService.pushTask(entry.getPuuid(), "SUMMONER", priority);
+            try {
+                saveLpHistory(entry, tierName);
+            } catch (Exception e) {
+                log.error("Failed to save LP history for {}: {}", entry.getPuuid(), e.getMessage());
+            }
+            return true;
+        } 
+        // Case 2: SummonerID만 있는 경우
+        else if (entry.getSummonerId() != null) {
+            redisQueueService.pushTask(entry.getSummonerId(), "SUMMONER_ID", priority);
+            return true;
+        }
+        return false;
     }
 
     private void saveLpHistory(TftLeagueItemDto entry, String tier) {

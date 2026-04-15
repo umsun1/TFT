@@ -10,4 +10,6 @@ public class TftLeagueEntryDto {
     private int wins;
     private int losses;
     private int leaguePoints;
+    private String summonerId;
+    private String summonerName;
 }
