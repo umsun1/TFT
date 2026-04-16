@@ -278,8 +278,11 @@
 											<img th:if="${p.companion != null}" loading="lazy"
 												th:src="${p.companion.companionImg}" class="w-full h-full scale-125">
 										</div>
-										<div class="truncate font-bold text-gray-300" th:text="${p.riotIdGameName}">소환사명
-										</div>
+										<!-- 상대방 닉네임 표기 (링크 걸기) -->
+										<a th:href="@{'/summoner/' + ${server} + '/' + ${p.riotIdGameName} + '/' + ${p.riotIdTagline}}"
+										   class="truncate font-bold text-gray-300 hover:text-blue-400 hover:underline transition-colors cursor-pointer"
+										   th:text="${p.riotIdGameName}">소환사명
+										</a>
 									</div>
 
 									<div class="flex-1 flex flex-wrap gap-2">
@@ -419,7 +422,7 @@
 							borderWidth: 2,
 							backgroundColor: 'rgba(59, 130, 246, 0.1)',
 							fill: true,
-							tension: 0.3,
+							tension: 0.4,
 							pointRadius: 3,
 							pointBackgroundColor: '#3b82f6',
 							pointHitRadius: 10
