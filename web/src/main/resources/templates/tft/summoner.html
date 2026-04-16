@@ -7,6 +7,19 @@
 	<title>TFT Matches - Analytics</title>
 	<script src="https://cdn.tailwindcss.com"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<style>
+		/* CDragon 커스텀 컬러 태그 치환 렌더링용 CSS */
+		healing { color: #4ade80; font-weight: bold; } /* text-green-400 */
+		magicDamage { color: #c084fc; font-weight: bold; } /* text-purple-400 */
+		physicalDamage { color: #fb923c; font-weight: bold; } /* text-orange-400 */
+		trueDamage { color: #f8fafc; font-weight: bold; } /* text-white */
+		status { color: #f87171; font-weight: bold; } /* text-red-400 */
+		shield { color: #60a5fa; font-weight: bold; } /* text-blue-400 */
+		scaleHealth { color: #facc15; font-weight: bold; }
+		scaleArmor { color: #facc15; font-weight: bold; }
+		scaleMR { color: #facc15; font-weight: bold; }
+		rules { color: #facc15; font-weight: bold; }
+	</style>
 </head>
 
 <body style="background-color: #212529; color: #ffffff;">
@@ -203,10 +216,44 @@
 													<span th:each="i : ${#numbers.sequence(1, unit.star)}">★</span>
 												</div>
 												<!-- 유닛 툴팁 (잘림 방지 z-index) -->
-												<div
-													class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100]">
-													<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap shadow-2xl"
-														th:text="${unit.championName}"></div>
+												<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100] whitespace-normal">
+													<div class="bg-[#111111] text-gray-200 text-xs w-72 rounded border border-gray-700 shadow-2xl flex flex-col overflow-hidden">
+														<!-- Header -->
+														<div class="flex items-center gap-2 p-2 bg-[#1a1c23] border-b border-gray-700">
+															<div class="flex flex-col w-full">
+																<div class="flex justify-between items-center w-full">
+																	<span class="font-bold text-sm text-yellow-500" th:text="${unit.championName}"></span>
+																</div>
+																<div class="flex flex-wrap gap-1 mt-1 text-[10px] text-gray-400">
+																	<span th:each="tr, stat : ${unit.traits}">
+																		<img th:if="${unit.traitIconUrls != null and stat.index < unit.traitIconUrls.size()}" th:src="${unit.traitIconUrls[stat.index]}" class="inline w-3 h-3 opacity-80 align-text-bottom grayscale">
+																		<span class="font-bold whitespace-nowrap" th:text="${tr}"></span>
+																	</span>
+																</div>
+																<span class="text-gray-400 text-xs mt-1.5" th:if="${unit.range > 0}">
+																	공격 사거리:
+																	<span class="text-yellow-600/80">
+																		<span th:each="i : ${#numbers.sequence(1, 5)}" th:text="${unit.range >= i ? '■' : '□'}"></span>
+																	</span>
+																</span>
+															</div>
+														</div>
+														<!-- Body -->
+														<div class="p-2 flex flex-col gap-2">
+															<div class="flex items-start gap-2">
+																<div class="w-8 h-8 rounded border border-gray-700 shrink-0 bg-gray-800 flex items-center justify-center overflow-hidden">
+																	<img th:if="${unit.skillIcon != null}" th:src="${unit.skillIcon}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+																</div>
+																<div class="flex flex-col flex-1">
+																	<div class="flex justify-between items-center">
+																		<span class="font-bold text-orange-300 text-sm" th:text="${unit.skillName}"></span>
+																	</div>
+																	<span class="text-blue-300 text-xs font-mono font-bold" th:if="${unit.mana > 0}" th:text="'마나: ' + ${unit.initialMana + ' / ' + unit.mana}"></span>
+																</div>
+															</div>
+															<div class="text-gray-300 leading-relaxed font-sans text-xs mt-1" th:utext="${unit.description}"></div>
+														</div>
+													</div>
 												</div>
 											</div>
 											<!-- 미니 아이템 아이콘 -->
@@ -216,10 +263,11 @@
 													<img th:src="${itemUrl}" loading="lazy"
 														class="w-full h-full object-cover rounded-sm border border-gray-700">
 													<!-- 아이템 툴팁 -->
-													<div
-														class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/item:block z-[110]">
-														<div class="bg-gray-900 text-white text-[9px] px-2 py-1 rounded border border-gray-600 whitespace-nowrap shadow-2xl"
-															th:text="${unit.items[itemIter.index]}"></div>
+													<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/item:block z-[110]">
+														<div class="bg-gray-900 text-white text-[9px] px-2 py-1 flex flex-col gap-1 rounded border border-gray-600 max-w-[200px] whitespace-normal min-w-[150px] shadow-2xl">
+															<span class="font-bold text-[10px] text-blue-300" th:text="${unit.items[itemIter.index]}"></span>
+															<div class="text-gray-400 leading-relaxed font-sans" th:if="${unit.itemDescriptions != null and unit.itemDescriptions.size() > itemIter.index}" th:utext="${unit.itemDescriptions[itemIter.index]}"></div>
+														</div>
 													</div>
 												</div>
 											</div>
@@ -232,10 +280,11 @@
 											<img th:src="${trait.iconUrl}" loading="lazy"
 												class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[14px] h-[14px] invert brightness-200">
 											<!-- 시너지 툴팁 -->
-											<div
-												class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-[100]">
-												<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap"
-													th:text="${trait.name}"></div>
+											<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-[100]">
+												<div class="bg-black text-white text-[9px] px-2 py-1 flex flex-col gap-1 rounded border border-gray-700 max-w-xs whitespace-normal min-w-[200px]">
+													<span class="font-bold text-[11px]" th:text="${trait.name}"></span>
+													<div class="text-gray-400 leading-relaxed font-sans" th:utext="${trait.description}"></div>
+												</div>
 											</div>
 										</div>
 									</div>
@@ -302,10 +351,44 @@
 													<span th:each="i : ${#numbers.sequence(1, u.star)}">★</span>
 												</div>
 												<!-- 유닛 커스텀 툴팁 -->
-												<div
-													class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100]">
-													<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap shadow-2xl"
-														th:text="${u.championName}"></div>
+												<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100] whitespace-normal">
+													<div class="bg-[#111111] text-gray-200 text-xs w-72 rounded border border-gray-700 shadow-2xl flex flex-col overflow-hidden">
+														<!-- Header -->
+														<div class="flex items-center gap-2 p-2 bg-[#1a1c23] border-b border-gray-700">
+															<div class="flex flex-col w-full">
+																<div class="flex justify-between items-center w-full">
+																	<span class="font-bold text-sm text-yellow-500" th:text="${u.championName}"></span>
+																</div>
+																<div class="flex flex-wrap gap-1 mt-1 text-[10px] text-gray-400">
+																	<span th:each="tr, stat : ${u.traits}">
+																		<img th:if="${u.traitIconUrls != null and stat.index < u.traitIconUrls.size()}" th:src="${u.traitIconUrls[stat.index]}" class="inline w-3 h-3 opacity-80 align-text-bottom grayscale">
+																		<span class="font-bold whitespace-nowrap" th:text="${tr}"></span>
+																	</span>
+																</div>
+																<span class="text-gray-400 text-xs mt-1.5" th:if="${u.range > 0}">
+																	공격 사거리:
+																	<span class="text-yellow-600/80">
+																		<span th:each="i : ${#numbers.sequence(1, 5)}" th:text="${u.range >= i ? '■' : '□'}"></span>
+																	</span>
+																</span>
+															</div>
+														</div>
+														<!-- Body -->
+														<div class="p-2 flex flex-col gap-2">
+															<div class="flex items-start gap-2">
+																<div class="w-8 h-8 rounded border border-gray-700 shrink-0 bg-gray-800 flex items-center justify-center overflow-hidden">
+																	<img th:if="${u.skillIcon != null}" th:src="${u.skillIcon}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+																</div>
+																<div class="flex flex-col flex-1">
+																	<div class="flex justify-between items-center">
+																		<span class="font-bold text-orange-300 text-sm" th:text="${u.skillName}"></span>
+																	</div>
+																	<span class="text-blue-300 text-xs font-mono font-bold" th:if="${u.mana > 0}" th:text="'마나: ' + ${u.initialMana + ' / ' + u.mana}"></span>
+																</div>
+															</div>
+															<div class="text-gray-300 leading-relaxed font-sans text-xs mt-1" th:utext="${u.description}"></div>
+														</div>
+													</div>
 												</div>
 											</div>
 											<!-- 아이템 표시 (이미지 아래로 이동) -->
@@ -315,10 +398,11 @@
 													<img th:src="${itemUrl}" loading="lazy"
 														class="w-full h-full object-cover">
 													<!-- 아이템 커스텀 툴팁 -->
-													<div
-														class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/item:block z-[120]">
-														<div class="bg-black text-white text-[8px] px-1.5 py-0.5 rounded border border-gray-700 whitespace-nowrap shadow-2xl"
-															th:text="${u.items[itemIter.index]}"></div>
+													<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/item:block z-[120]">
+														<div class="bg-black text-white text-[8px] px-1.5 py-0.5 flex flex-col gap-1 rounded border border-gray-700 max-w-[200px] whitespace-normal min-w-[150px] shadow-2xl">
+															<span class="font-bold text-[10px] text-blue-300" th:text="${u.items[itemIter.index]}"></span>
+															<div class="text-gray-400 leading-relaxed font-sans" th:if="${u.itemDescriptions != null and u.itemDescriptions.size() > itemIter.index}" th:utext="${u.itemDescriptions[itemIter.index]}"></div>
+														</div>
 													</div>
 												</div>
 											</div>
@@ -332,10 +416,11 @@
 											<img th:src="${t.iconUrl}" loading="lazy"
 												class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[10px] h-[10px] invert brightness-200">
 											<!-- 시너지 커스텀 툴팁 -->
-											<div
-												class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-50">
-												<div class="bg-black text-white text-[9px] px-2 py-1 rounded border border-gray-700 whitespace-nowrap shadow-xl"
-													th:text="${t.name}"></div>
+											<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-50">
+												<div class="bg-black text-white text-[9px] px-2 py-1 flex flex-col gap-1 rounded border border-gray-700 max-w-xs whitespace-normal min-w-[200px] shadow-xl">
+													<span class="font-bold text-[11px]" th:text="${t.name}"></span>
+													<div class="text-gray-400 leading-relaxed font-sans" th:utext="${t.description}"></div>
+												</div>
 											</div>
 										</div>
 									</div>

@@ -17,8 +17,12 @@ public interface TftStaticDataService {
     // Alias for getUnitImgUrl
     default String getChampionIconUrl(String name) { return getUnitImgUrl(name); }
     default String getChampionKoName(String name) { return getUnitKoName(name); }
-    
     int getChampionCost(String name);
+    String getUnitDesc(String characterId);
+    com.tft.web.service.TftStaticDataServiceImp.UnitDetailData getUnitDetail(String characterId);
+    String getItemDesc(String itemName);
+    String getTraitDesc(String traitId);
+    String findTraitIdByAlias(String engAlias);
 
     List<ChampionDto> getAllChampions();
 }
