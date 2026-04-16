@@ -43,10 +43,10 @@
                             <!-- 티어 -->
                             <td class="px-6 py-4 text-center">
                                 <div class="flex flex-col items-center">
-                                    <img th:src="'https://cdn.metatft.com/file/metatft/ranks/wings_' + ${player.tier.toLowerCase()} + '.png'" 
-                                         class="w-8 h-8 object-contain">
-                                    <span class="text-[10px] font-bold mt-1 text-gray-400" th:text="${player.tier}">CHALLENGER</span>
-                                </div>
+                                     <img th:src="'https://cdn.metatft.com/file/metatft/ranks/wings_' + ${player.tier.toLowerCase()} + '.png'" 
+                                          class="w-8 h-8 object-contain">
+                                     <span class="text-[10px] font-bold mt-1 text-gray-400" th:text="${player.tier} + (${player.rankStr != null and player.rankStr != '' ? ' ' + player.rankStr : ''})">CHALLENGER I</span>
+                                 </div>
                             </td>
 
                             <!-- LP -->

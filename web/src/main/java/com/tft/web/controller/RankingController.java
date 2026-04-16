@@ -104,6 +104,7 @@ public class RankingController {
                     .summonerName(name)
                     .tagLine(tag)
                     .tier(h.getTier())
+                    .rankStr(h.getRank_str())
                     .lp(h.getLp())
                     .wins(wins)
                     .losses(losses)

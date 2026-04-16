@@ -28,7 +28,19 @@ public interface LpHistoryRepository extends JpaRepository<LpHistory, Long> {
                 WHEN 'MASTER' THEN 3
                 WHEN 'DIAMOND' THEN 4
                 WHEN 'EMERALD' THEN 5
-                ELSE 6
+                WHEN 'PLATINUM' THEN 6
+                WHEN 'GOLD' THEN 7
+                WHEN 'SILVER' THEN 8
+                WHEN 'BRONZE' THEN 9
+                WHEN 'IRON' THEN 10
+                ELSE 11
+            END,
+            CASE rank_str
+                WHEN 'I' THEN 1
+                WHEN 'II' THEN 2
+                WHEN 'III' THEN 3
+                WHEN 'IV' THEN 4
+                ELSE 5
             END,
             lp DESC
         LIMIT 300
