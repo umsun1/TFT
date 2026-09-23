@@ -83,5 +83,21 @@ public class MainController {
 			return "redirect:/";
 		}
 	}
-	
+
+	// 전적 카드 상세(1~8등) - 카드 클릭 시 fetch로 호출되어 HTML fragment만 반환
+	@GetMapping("/match/{matchId}/detail")
+	public String getMatchDetail(@PathVariable String matchId,
+								 @RequestParam(defaultValue = "") String puuid,
+								 @RequestParam(defaultValue = "kr") String server,
+								 Model model) {
+		MatchApiDto match = matchService.getMatchDetailById(matchId, puuid);
+		if (match == null) {
+			throw new org.springframework.web.server.ResponseStatusException(
+					org.springframework.http.HttpStatus.NOT_FOUND, "매치 정보를 찾을 수 없습니다: " + matchId);
+		}
+		model.addAttribute("match", match);
+		model.addAttribute("myPuuid", puuid);
+		model.addAttribute("server", server);
+		return "fragments/match-detail :: detail";
+	}
 }

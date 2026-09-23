@@ -70,7 +70,7 @@ public class MatchServiceImp implements MatchService {
         headers.set("X-Riot-Token", apiKey);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        long seasonStartEpoch = 1776178800L; // 2026년 4월 15일 기준
+        long seasonStartEpoch = 1787691600L; // 2026년 8월 26일 기준
 
         try {
             // startTime을 추가하여 전시즌 데이터 유입 방지
@@ -100,6 +100,12 @@ public class MatchServiceImp implements MatchService {
             }
         }
         return result;
+    }
+
+    @Override
+    public MatchApiDto getMatchDetailById(String matchId, String myPuuid) {
+        // 기존 로직 재사용: DB(findByGaId) 우선 조회 -> 없으면 Riot API 호출
+        return getSingleMatchDetail(matchId, myPuuid != null ? myPuuid : "");
     }
 
     private MatchApiDto getSingleMatchDetail(String matchId, String myPuuid) {
