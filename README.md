@@ -2,121 +2,169 @@
 <img width="821" height="566" alt="image" src="https://github.com/user-attachments/assets/ab6057f6-5070-4af4-8e53-670c4f9e33f9" />
 
 ## 프로젝트 개요
-**TFT.GG**는 라이엇 게임즈(Riot Games)의 API를 연동하여 대량의 매치 데이터를 안정적으로 수집하고, 이를 기반으로 실시간 랭킹과 전적 정보를 제공하는 백엔드 중심의 서비스입니다. 이전 프로젝트의 한계점이었던 엄격한 외부 API 호출 제한(Rate Limit)을 극복하기 위해 **서버 분리** 및 **비동기 큐 시스템** 설계와 랭킹 페이지의 **조회 성능 최적화**에 주력했습니다.
 
-- **핵심 목표:** API 제한을 준수하는 무중단 데이터 수집 시스템 구축 및 빠른 전적 조회 서비스 제공
-- **개발 인원:** 1인 (개인 프로젝트)
-- **주요 특징:** 멀티 모듈(Batch/Web) 아키텍처, Redis 인메모리 비동기 작업 큐
+Riot Games API로 TFT 매치 데이터를 수집해 저장하고, 전적·누적 통계·LP 추이·랭킹을 보여주는 서비스입니다.
+
+3인 팀으로 만든 첫 버전은 검색할 때마다 Riot API를 호출했습니다. 호출 제한에 걸리면 화면이 멈췄고, 데이터를 쌓지 않아 누적 통계를 보여줄 수 없었습니다. 이 저장소는 그 뒤 혼자 다시 만든 버전으로, 수집과 조회를 분리하고 매치를 DB에 저장합니다.
+
+- **개발 인원:** 1인 (재개발)
+- **구성:** Web(조회) · Batch(수집) 두 애플리케이션, MySQL, Redis
+- **다룬 문제:** 호출 제한이 있는 외부 API의 수집 제어, 전적 페이지 조회 쿼리 개선
 
 ---
 
 ## 사용 기술
 
-- **Backend :** Java, Spring Boot, Spring Data JPA, Spring Scheduler
+- **Backend :** Java 17, Spring Boot, Spring Data JPA, Spring Scheduler
 - **Database / Cache :** MySQL, Redis
-- **Frontend :** Thymeleaf, JavaScript (ES6+), HTML5, CSS3
+- **Frontend :** Thymeleaf, JavaScript, HTML, CSS
 - **External API :** Riot Games API (TFT)
+- **실행 환경 :** Docker Compose
 
 ---
 
-## 실행 방법 (Getting Started)
-
-본 프로젝트를 로컬에서 실행하기 위해서는 최상위 경로에 반드시 `.env` 파일을 생성하고 아래 환경 변수 값들을 기입해야 정상 작동합니다.
-
-```env
-# 프로젝트 루트 디렉토리에 .env 파일 생성 후 기입
-MYSQL_ROOT_PASSWORD=your_root_password
-MYSQL_USER=your_db_user
-MYSQL_PASSWORD=your_db_password
-
-# Riot Games Developer Portal에서 발급받은 API KEY
-RIOT_API_KEY=your_riot_api_key
-```
-
-### Docker 실행
-Docker Compose를 사용하여 백엔드 환경(Web, Batch)과 Data 인프라(MySQL, Redis)를 한 번에 구축합니다.
-```bash
-docker-compose up -d --build
-```
-
----
-
-## 핵심 기능 (Key Features)
-
-
-### 1. 웹/배치 분리와 비동기 데이터 수집 시스템
-- **인메모리 작업 큐 도입:** 대량의 매치 데이터 수집 시 관계형 데이터베이스(RDBMS)에 작업 대기열을 기록하고 폴링(Polling)할 경우 발생하는 디스크 I/O 부하와 Lock 경합 문제를 해결하기 위해, **Redis**를 활용한 인메모리 비동기 큐를 구축했습니다.
-- **우선순위 기반 작업 할당:** 챌린저 등 우선 조회가 필요한 유저 수집을 Redis의 점수(Score) 기능으로 관리합니다. 이를 통해 DB Lock 경합 없이 안전하게 우선순위에 따라 작업을 배분합니다.
-- **티어별 수집 전략:** 챌린저와 그랜드 마스터 티어 유저를 우선적으로 추적하여 데이터의 질을 높였습니다.
-
-### 2. API 호출 제한 대응 및 복구
-- **지능적 호출 제어:** 라이엇 API의 `Retry-After` 헤더를 분석하여, 429 에러(Too Many Requests) 발생 시 해당 대기 시간만큼 스케줄러를 대기하도록 처리했습니다.
-- **유연한 Re-queue 처리:** 네트워크 오류 등 일시적 문제 발생 시, 해당 작업을 DB 에러 상태로 기록하는 대신 **Redis 큐에 다시 밀어넣어(Re-queue) 재시도** 하도록 설계하여 안정성을 높였습니다.
-
-### 3. 랭킹 및 전적 페이지
-- **실시간 리더보드:** Batch 서버에서 주기적으로 업데이트하는 LP를 기반으로 상위 랭커 순위를 실시간 제공합니다.
-- **사용자 중심 레이아웃**: 챔피언 초상화와 아이템 아이콘을 매핑하고, 유닛 리스트를 코스트가 높은 순으로 자동 정렬하여 덱의 핵심 기물을 한눈에 확인할 수 있는 전적 조회 화면을 구성했습니다.
-- **티어 보정 LP 추이 그래프 :** Chart.js를 활용해 최근 점수 변화를 시각화하되, 승급/강등 시의 단절을 보정하는 티어 보정 점수 로직을 적용하여 실질적인 성장 곡선을 구현했습니다.
-
----
-
-## 트러블슈팅
-
-### 1. 외부 API의 Rate Limit 핸들링과 안정성 확보
-- **문제:** 단순 루프 방식으로 API를 호출할 경우, 초당/분당 제한에 걸려 다수의 요청이 실패하고 데이터 수집이 일시 중단되는 문제 발생.
-- **해결:**
-    - `MatchFetchService`에 지능적 호출 제어 로직을 구현했습니다. `HttpClientErrorException.TooManyRequests` 예외를 포착하여 API가 지시하는 대기 시간(Retry-After)을 준수하도록 스레드 제어(`Thread.sleep`)를 적용했습니다.
-    - 이를 통해 데이터 유실 없이 안정적인 수집 파이프라인을 구축했습니다.
-
-### 2. 멀티 모듈 아키텍처 및 비동기 파이프라인 설계
-- **문제:** 전적 조회 요청 시, 사용자의 수백 건의 매치 데이터를 실시간 동기식으로 모두 수집하게 되면 외부 API 호출 제한 지연으로 인해 화면 응답 속도가 무한정 길어지는 구조적 한계가 존재했습니다.
-- **해결:**
-    - **관심사의 분리:** 즉각적인 사용자 화면 렌더링을 처리하는 Web 서버와, 백그라운드 데이터 수집을 전담하는 Batch 서버로 역할을 분리했습니다.
-    - **비동기 큐 기반 100% 위임:** 사용자의 티어, 레벨, 닉네임 등 프로필 렌더링을 위한 기본 필수 정보만 API로 즉시 동기 호출하여 응답하고, 수백 건의 무거운 매치 상세 수집 작업은 **Redis 큐에 비동기로 위임(Push)하여 백그라운드에서 배치 서버가 수집(Pop)** 하도록 설계했습니다.
-    - **결과:** 엄청난 양의 외부 API 통신과 데이터를 수집하는 과정에서도 Web 서버의 응답 속도에는 전혀 영향을 주지 않는, 무중단 데이터 파이프라인 구조를 구축했습니다.
- 
-### 3. 전적 조회 성능 최적화 (N+1 문제 해결)
-- **문제:** 전적 조회 시 4단계(GameInfo-Participant-Unit-Item) 연관 데이터를 개별 호출하며 발생하는 N+1 문제와 다중 컬렉션 조인에 따른 카테시안 곱 현상으로 응답 속도 저하 문제 발생.
-- **해결:**
-    - **로딩 최적화:** 다중 조인을 제거하고 `@BatchSize`를 적용하여 계층별로 흩어진 수백 건의 쿼리를 단 4회의 IN 쿼리로 최적화했습니다.
-    - **데이터 처리 최적화:** 어플리케이션 계층의 통계 연산을 DB 집계 함수로 이관하고 인덱스를 적용하여 데이터 가공 속도를 개선했습니다.
-    - **결과:** 응답 속도를 5.0s에서 0.6s로 약 88% 단축하여 대규모 데이터 환경에서도 안정적인 서비스 가용성 확보.
-
----
-
-## 시스템 아키텍처
+## 시스템 구조
 
 ```mermaid
 graph LR
-    %% 스타일 정의
     classDef client fill:#fff,stroke:#333,stroke-width:2px;
     classDef server fill:#f0f7ff,stroke:#0055aa,stroke-width:2px;
     classDef db fill:#fff9f0,stroke:#d4a017,stroke-width:2px;
     classDef external fill:#fff,stroke:#555,stroke-width:2px,stroke-dasharray: 5 5;
 
-    %% 노드 설정 
     Client[Client]:::client
-    Web["Web Server<br/>(Spring Boot)"]:::server
-    Redis[("Redis<br/>InMemory Queue")]:::db
-    MySQL[("MySQL<br/>(Persistent Data)")]:::db
-    Batch["Batch Server<br/>(Spring Scheduler)"]:::server
+    Web["Web Server"]:::server
+    Queue[("Redis ZSet<br/>수집 대기열")]:::db
+    Limiter[("Redis<br/>호출 기록")]:::db
+    MySQL[("MySQL")]:::db
+    Batch["Batch Server"]:::server
     Riot["Riot API"]:::external
 
-    %% 1. 사용자 요청 흐름 
-    Client -- "Match History Request" --> Web
-
-    %% 2. Web Server 데이터 흐름 
-    Web -- "[PUSH] Queue Task" --> Redis
-    MySQL -- "Load Match Data" --> Web
-
-    %% 3. Batch Server 데이터 흐름 
-    Redis -- "[POP] Task by Priority" --> Batch
-    Batch -- "Save Detail Data" --> MySQL
-
-    %% 4. 외부 API 호출 구조 
-    Web -- "API Call (Profile/League)" --> Riot
-    Batch -- "API Call (Match Detail)" --> Riot
+    Client -- "전적 조회" --> Web
+    Web -- "수집 요청 (우선순위 999)" --> Queue
+    MySQL -- "전적 · 통계" --> Web
+    Queue -- "우선순위 높은 순" --> Batch
+    Batch -- "호출 전 한도 확인" --> Limiter
+    Web -- "호출 기록" --> Limiter
+    Batch -- "매치 상세" --> Riot
+    Web -- "프로필 · 리그" --> Riot
+    Batch -- "저장" --> MySQL
 ```
 
+- Web은 프로필 표시에 필요한 정보만 Riot API로 바로 조회하고, 매치 수집은 대기열에 등록만 합니다.
+- Batch가 대기열에서 우선순위가 높은 작업부터 꺼내 수집합니다. 사용자가 검색한 계정(999)이 정기 수집 대상보다 먼저 처리됩니다.
+
 ---
-*본 포트폴리오는 프로젝트의 핵심인 데이터 파이프라인 구축 및 성능 최적화 역량에 집중하여 작성되었습니다.*
+
+## 주요 설계와 문제 해결
+
+### 1. 호출 제한: 429를 받기 전에 막기
+
+**문제.** Riot API는 키 하나에 2분당 100회(초당 20회)로 제한됩니다. 처음에는 수집 주기(2초)만으로 속도를 조절하고, 429를 받으면 `Retry-After`만큼 `Thread.sleep`으로 기다렸습니다. 이 방식에는 세 가지 문제가 있었습니다.
+
+- 소환사 작업은 매치 목록을 100개씩 여러 번 연달아 조회합니다. 작업 사이 간격으로는 호출 수가 조절되지 않아 2분마다 429가 났습니다.
+- Web과 Batch가 같은 키를 쓰는데 서로의 사용량을 알 수 없었습니다.
+- 대기하는 동안 수집 스레드가 트랜잭션을 연 채 멈춰 DB 커넥션을 잡고 있었습니다.
+
+**해결.**
+
+- **사전 제한기** (`batch/.../ratelimit/RiotRateLimiter`): 호출 시각을 Redis ZSet에 기록해 최근 2분·1초 구간의 호출 수를 셉니다. 한도가 찼으면 호출하지 않습니다. Batch의 모든 Riot 호출은 `RestTemplate` 인터셉터 한 곳에서 이 제한기를 지납니다.
+- **한도 공유**: Web도 자기 호출을 같은 키에 기록합니다(`web/.../ratelimit/RiotCallRecorder`). Batch는 2분 100회 중 80회까지만 쓰고, Web이 쓴 만큼 덜 씁니다. 카운터를 Redis에 둔 이유는 두 애플리케이션이 별도 프로세스라 메모리 안의 카운터로는 합산할 수 없기 때문입니다.
+- **대기 대신 건너뛰기**: 그래도 429가 오면 Redis에 차단 시간만 기록하고 작업을 대기열에 되돌린 뒤 바로 반환합니다. 스케줄러는 차단 중이거나 한도가 찼으면 작업을 꺼내지 않습니다. 트랜잭션은 저장 단계에만 둡니다.
+
+**결과.** 같은 대기열로 10분씩 수집 (2026-10-11, 소환사 작업 기준)
+
+| 구성 | 429 발생 | API 호출 수 |
+| --- | --- | --- |
+| 1초 주기, 제한기 없음 | 5회 | 약 477회 |
+| 2초 주기, 제한기 없음 | 5회 | 약 472회 |
+| 1초 주기 + 제한기 | 0회 | 약 373회 |
+
+호출 수가 줄어든 것은 2분 100회 중 20회를 Web 몫으로 남겼기 때문이며, `riot.rate-limit.batch-per-two-minutes`로 조절합니다.
+
+### 2. 전적 페이지 조회 개선
+
+**문제.** 화면에는 20경기만 보여주는데 한 사람의 전체 기록을 읽고 있었습니다. 기록을 모두 가져와 Java에서 정렬·필터한 뒤 20개를 골랐고, 그 과정에서 경기 정보가 건별로 지연 로딩되어 전적이 1건 쌓일 때마다 SQL이 1회씩 늘었습니다.
+
+**해결.**
+
+| 처리 | 변경 전 | 변경 후 |
+| --- | --- | --- |
+| 전적 목록 | 전체 조회 후 Java에서 정렬·필터·20개 선택 | DB에서 정렬·페이징, 경기 정보는 fetch join |
+| 통계 | 전체 기록을 엔티티로 읽어 Java에서 계산 | `COUNT`·`AVG`·`SUM` 집계 쿼리 1회 |
+| 참가자·유닛·특성 | 건별 지연 로딩 | `@BatchSize(100)`으로 묶어 IN 쿼리 |
+
+참가자·유닛·특성을 한 번에 fetch join하지 않은 이유는 컬렉션을 여러 개 join하면 행이 곱으로 늘고 페이징이 메모리에서 일어나기 때문입니다.
+
+**결과.** 전적 페이지 요청 1회 기준 (커밋 `f46b103` → `759ac7d`)
+
+| 계정의 저장 전적 수 | SQL 실행 수 | 응답 시간 중앙값 |
+| --- | --- | --- |
+| 100건 | 449 → 12 | 419ms → 302ms |
+| 316건 | 701 → 11 | 592ms → 286ms |
+| 541건 | 890 → 12 | 671ms → 336ms |
+| 1,000건 | 1,349 → 12 | 957ms → 375ms |
+
+측정 조건: 로컬 MySQL(매치 16,381건, 참가 기록 130,047건), 워밍업 5회 후 15회 반복, Riot API 응답은 고정값으로 대체해 제외, SQL 수는 Hibernate Statistics.
+
+### 3. 랭킹 · LP 추이
+
+- Batch가 주기적으로 갱신한 LP 기록으로 상위 랭커 순위를 보여줍니다.
+- LP 추이 그래프는 승급·강등 때 점수가 끊기지 않도록 티어를 반영해 보정한 값으로 그립니다.
+
+---
+
+## 알고 있는 한계
+
+| 한계 | 개선 방향 |
+| --- | --- |
+| 대기열에서 꺼낸 작업을 처리하다 종료되면 그 작업은 사라짐 | 처리 중 목록을 따로 두고 완료 시 제거 |
+| 429 외의 오류는 로그만 남기고 재시도하지 않음 | 재시도 횟수 제한, 실패 작업 보관 |
+| 여러 번 호출하는 작업이 중간에 한도에 걸리면 처음부터 다시 조회 | 진행 위치를 저장해 이어서 처리 |
+| `participant.pa_puuid`에 인덱스가 없어 조회가 전체 행을 훑음 | 인덱스 추가 후 재측정 |
+| 전적 페이지 HTML이 약 4MB | 경기 상세는 펼칠 때 불러오도록 분리 |
+| 로컬 Docker Compose로만 실행 | 클라우드 배포, 수집 로그 모니터링 |
+
+---
+
+## 실행 방법
+
+### 1. 설정 파일
+
+프로젝트 루트에 `.env`를 만듭니다.
+
+```env
+MYSQL_ROOT_PASSWORD=your_root_password
+MYSQL_USER=your_db_user
+MYSQL_PASSWORD=your_db_password
+RIOT_API_KEY=your_riot_api_key
+```
+
+`web/src/main/resources/application.properties`와 `batch/src/main/resources/application.properties`는 Git에 올라가지 않으므로 직접 만들어야 합니다. 필요한 키는 `spring.datasource.*`, `spring.data.redis.*`, `riot.api.key`이며, Web은 캐시 유지 시간(`app.cache.ttl.account`, `app.cache.ttl.league`, `app.cache.ttl.summoner`)도 필요합니다.
+
+### 2. 실행
+
+```bash
+docker-compose up -d --build
+```
+
+Web은 `http://localhost:8080`에서 열립니다.
+
+---
+
+## 테스트와 측정
+
+호출 제한기 테스트 (Redis가 `localhost:6379`에서 실행 중이어야 합니다)
+
+```bash
+cd batch
+./mvnw test -Dtest=RiotRateLimiterTest
+```
+
+전적 페이지 조회 성능 측정 (`tft_mysql` 컨테이너 실행 중, Git Bash)
+
+```bash
+bash docs/bench/run-bench.sh
+```
+
+두 커밋의 Web 모듈을 임시 폴더에 꺼내 같은 DB에 연결하고, 전적 페이지를 반복 요청해 SQL 실행 수와 응답 시간을 출력합니다. Riot API 응답만 고정값으로 대체하며 DB는 변경하지 않습니다.
