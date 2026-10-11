@@ -9,7 +9,7 @@ README에 적은 수치의 원본 출력입니다. 모두 같은 PC, 같은 로�
 | `03-index-on.txt` | 인덱스를 사용하는 상태의 실행 계획과 측정 출력 | 위와 같음 |
 | `04-rate-limit-runs.txt` | 수집 10분 × 3회의 요약: 429 발생 시각, 완료 작업 수, API 호출 수 | 아래 참고 |
 | `04-raw-*.txt` | 위 3회의 Batch 로그 원본 (API 키는 `REDACTED`로 기록됨) | |
-| `05-batch-tests.txt` | 호출 제한기·수집 오류 처리 테스트 14개 실행 결과 | `cd batch && ./mvnw test -Dtest='RiotRateLimiterTest,MatchFetchServiceTest'` |
+| `05-batch-tests.txt` | 호출 제한기·수집 오류 처리 테스트 15개 실행 결과 | `cd batch && ./mvnw test -Dtest='RiotRateLimiterTest,MatchFetchServiceTest'` |
 
 ## 출력 읽는 법
 

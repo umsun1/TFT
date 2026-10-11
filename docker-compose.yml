@@ -59,6 +59,8 @@ services:
       - RIOT_API_KEY=${RIOT_API_KEY}
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      # 기본값은 스레드 1개라 LP 갱신이 도는 동안 매치 수집이 멈춘다
+      - SPRING_TASK_SCHEDULING_POOL_SIZE=3
     restart: always
 
 volumes:

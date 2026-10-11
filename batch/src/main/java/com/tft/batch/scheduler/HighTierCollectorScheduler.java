@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 public class HighTierCollectorScheduler {
 
     private final HighTierCollectorService highTierCollectorService;
+    private final com.tft.batch.ratelimit.RiotRateLimiter rateLimiter;
 
     // 프로그램 시작 시 1회 즉시 실행
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
@@ -24,6 +25,6 @@ public class HighTierCollectorScheduler {
     @Scheduled(cron = "0 0 3 * * *")
     public void collectHighTierPlayers() {
         log.info("Scheduled task: Collecting high tier players");
-        highTierCollectorService.collectHighTierPlayers();
+        rateLimiter.runPatiently(highTierCollectorService::collectHighTierPlayers);
     }
 }

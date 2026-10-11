@@ -60,6 +60,8 @@ public class RiotRateLimiter {
     private final long shortWindowMs;
     private final int shortLimit;
     private final long maxWaitMs;
+    // 랭커 수집·LP 갱신처럼 여러 명을 차례로 도는 작업은 한도가 찰 때 건너뛰지 않고 기다려야 한다
+    private final ThreadLocal<Boolean> patient = ThreadLocal.withInitial(() -> false);
 
     @Autowired
     public RiotRateLimiter(StringRedisTemplate redis,
@@ -91,8 +93,22 @@ public class RiotRateLimiter {
     }
 
     /**
+     * 이 안에서 일어나는 Riot 호출은 한도가 비워질 때까지 기다린다.
+     * 대기열 작업과 달리 되돌려 둘 곳이 없는 일괄 작업(랭커 수집, LP 갱신)에 쓴다.
+     */
+    public void runPatiently(Runnable job) {
+        patient.set(true);
+        try {
+            job.run();
+        } finally {
+            patient.remove();
+        }
+    }
+
+    /**
      * 호출 1건을 확보한다. 잠깐(maxWaitMs 이내) 기다리면 되는 경우에만 기다리고,
      * 그보다 오래 걸리면 예외를 던져 호출한 쪽이 작업을 미루게 한다.
+     * runPatiently 안에서는 한도가 비워질 때까지 기다린다.
      */
     public void acquire() {
         long waited = 0;
@@ -101,7 +117,7 @@ public class RiotRateLimiter {
             if (wait == 0) {
                 return;
             }
-            if (waited + wait > maxWaitMs) {
+            if (!patient.get() && waited + wait > maxWaitMs) {
                 throw new RiotRateLimitedException(wait);
             }
             try {

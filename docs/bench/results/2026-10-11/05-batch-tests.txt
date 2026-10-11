@@ -1,25 +1,8 @@
-tests exit=0
 -------------------------------------------------------------------------------
 Test set: com.tft.batch.ratelimit.RiotRateLimiterTest
 -------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.616 s -- in com.tft.batch.ratelimit.RiotRateLimiterTest
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.938 s -- in com.tft.batch.ratelimit.RiotRateLimiterTest
 -------------------------------------------------------------------------------
 Test set: com.tft.batch.service.MatchFetchServiceTest
 -------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.905 s -- in com.tft.batch.service.MatchFetchServiceTest
-
-## 테스트별 결과
-PASS RiotRateLimiterTest.budgetReturnsWhenWindowSlides 1.442s
-PASS RiotRateLimiterTest.callsRecordedByWebReduceBatchBudget 0.132s
-PASS RiotRateLimiterTest.blockedAfter429UntilRetryAfterPasses 0.481s
-PASS RiotRateLimiterTest.acquireThrowsInsteadOfSleepingWhenWaitIsLong 0.138s
-PASS RiotRateLimiterTest.peekDoesNotConsumeBudget 0.138s
-PASS RiotRateLimiterTest.shortWindowLimitsBurst 0.124s
-PASS RiotRateLimiterTest.allowsCallsUpToLimitThenReportsWaitTime 0.138s
-PASS MatchFetchServiceTest.doesNotRetryNotFound 0.878s
-PASS MatchFetchServiceTest.movesTaskToFailedListAfterMaxRetries 0.005s
-PASS MatchFetchServiceTest.doesNotTakeTaskWhileRateLimitBudgetIsExhausted 0.003s
-PASS MatchFetchServiceTest.requeuesWithSamePriorityOn429WithoutCountingAsFailure 0.002s
-PASS MatchFetchServiceTest.requeuesWhenBudgetRunsOutInTheMiddleOfTask 0.003s
-PASS MatchFetchServiceTest.savesMatchAndClearsRetryCountOnSuccess 0.003s
-PASS MatchFetchServiceTest.retriesTransientErrorWhileUnderLimit 0.005s
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.862 s -- in com.tft.batch.service.MatchFetchServiceTest

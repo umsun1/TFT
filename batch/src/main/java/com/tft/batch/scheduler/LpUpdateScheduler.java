@@ -12,12 +12,13 @@ import org.springframework.stereotype.Component;
 public class LpUpdateScheduler {
 
     private final LpUpdateService lpUpdateService;
+    private final com.tft.batch.ratelimit.RiotRateLimiter rateLimiter;
 
     // Run every 30 minutes
     @Scheduled(fixedDelay = 1800000)
     public void run() {
         log.info("Starting LP Update Scheduler...");
-        lpUpdateService.updateActiveSummonersLp();
+        rateLimiter.runPatiently(lpUpdateService::updateActiveSummonersLp);
         log.info("LP Update Scheduler finished.");
     }
 }

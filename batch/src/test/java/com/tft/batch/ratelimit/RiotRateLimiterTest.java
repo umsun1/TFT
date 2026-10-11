@@ -125,6 +125,17 @@ class RiotRateLimiterTest {
     }
 
     @Test
+    void patientJobWaitsForBudgetInsteadOfFailing() {
+        RiotRateLimiter limiter = limiter(300, 1, 100, 100);
+        limiter.acquire();
+
+        long start = System.currentTimeMillis();
+        limiter.runPatiently(limiter::acquire);
+
+        assertThat(System.currentTimeMillis() - start).isGreaterThanOrEqualTo(150);
+    }
+
+    @Test
     void acquireThrowsInsteadOfSleepingWhenWaitIsLong() {
         RiotRateLimiter limiter = limiter(60_000, 1, 1_000, 100);
         limiter.acquire();
