@@ -35,7 +35,8 @@ public class RiotSummonerApiClient {
     @Value("${riot.api.key}")
     private String apiKey;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @org.springframework.beans.factory.annotation.Autowired
+    private RestTemplate restTemplate;
 
     // 닉네임 + 태그라인 -> PUUID (TTL 24h)
     @Cacheable(cacheNames = CacheNames.ACCOUNT, key = ACCOUNT_KEY, unless = "#result == null")

@@ -49,7 +49,8 @@ public class MatchServiceImp implements MatchService {
     @Value("${riot.api.key}")
     private String apiKey;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @org.springframework.beans.factory.annotation.Autowired
+    private RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired

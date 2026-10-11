@@ -15,7 +15,8 @@ public class MatchFetchScheduler {
 
     private final MatchFetchService matchFetchService;
 
-    @Scheduled(fixedDelay = 2000)
+    // 호출 속도는 RiotRateLimiter가 제어한다. 이 간격은 대기열을 확인하는 주기일 뿐이다.
+    @Scheduled(fixedDelayString = "${batch.match-fetch.delay-ms:1000}")
     public void run() {
         log.info("match fetch scheduler start");
         matchFetchService.fetchNext();
