@@ -1,14 +1,14 @@
 package com.tft.batch.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 
 import com.tft.batch.client.RiotMatchClient;
 import com.tft.batch.client.RiotSummonerClient;
 import com.tft.batch.client.dto.RiotMatchDetailResponse;
 import com.tft.batch.client.dto.TftSummonerDto;
+import com.tft.batch.ratelimit.RiotRateLimitedException;
+import com.tft.batch.ratelimit.RiotRateLimiter;
 import com.tft.batch.repository.GameInfoRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,13 +24,21 @@ public class MatchFetchService {
     private final RiotSummonerClient riotSummonerClient;
     private final MatchDetailSaveService matchDetailSaveService;
     private final GameInfoRepository gameInfoRepository;
+    private final RiotRateLimiter rateLimiter;
     
     // [추가] 랭킹 정보 즉시 갱신을 위한 의존성
     private final com.tft.batch.client.RiotLeagueClient riotLeagueClient;
     private final com.tft.batch.repository.LpHistoryRepository lpHistoryRepository;
 
-    @Transactional
+    // 트랜잭션은 저장 단계(MatchDetailSaveService)에만 둔다. 여기서 열면 외부 API 호출 동안 DB 커넥션을 잡고 있게 된다.
     public void fetchNext() {
+        // 한도가 찼거나 429로 차단된 동안에는 작업을 꺼내지 않고 이번 주기를 건너뜁니다.
+        long waitMs = rateLimiter.peekWaitMillis();
+        if (waitMs > 0) {
+            log.debug("Riot rate limit budget exhausted. Skip this tick ({} ms left)", waitMs);
+            return;
+        }
+
         // Redis 큐에서 우선순위가 가장 높은 작업 하나를 꺼냅니다.
         RedisQueueService.QueueTask task = redisQueueService.popTask();
         if (task == null) return;
@@ -49,26 +57,18 @@ public class MatchFetchService {
             }
             // ZSet에서 이미 Pop 되었으므로 DONE 처리는 별도로 필요하지 않습니다.
         } catch (HttpClientErrorException.TooManyRequests e) {
-            log.warn("Rate limit exceeded. Waiting based on Retry-After header...");
-            
-            String retryAfter = e.getResponseHeaders().getFirst("Retry-After");
-            int waitSec = (retryAfter != null) ? Integer.parseInt(retryAfter) : 10;
-            
-            // 상태를 READY 대신 Redis 큐에 다시 밀어넣어 다음 순서에 시도하도록 합니다. (Re-queue)
+            // 차단 시간은 인터셉터가 이미 기록했습니다. 작업만 같은 우선순위로 되돌리고 스레드는 바로 반환합니다.
             redisQueueService.pushTask(queue.id, queue.type, queue.priority);
-
-            try {
-                Thread.sleep((waitSec + 1) * 1000L);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
+        } catch (RiotRateLimitedException e) {
+            // 작업 도중 한도가 찬 경우(매치 목록을 여러 번 조회하는 작업 등): 되돌려 두고 다음 주기에 다시 시도합니다.
+            log.info("Riot rate limit budget exhausted while processing {}. Re-queued.", queue.id);
+            redisQueueService.pushTask(queue.id, queue.type, queue.priority);
         } catch (Exception e) {
             log.error("Error processing queue {}: {}", queue.id, e.getMessage());
             // 에러 발생 시 버려지거나 데드레터 큐로 보냄 (현재는 로그만 남김)
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processSummonerId(RedisQueueService.QueueTask queue) {
         log.info("Resolving SummonerID={} to PUUID", queue.id);
         TftSummonerDto summoner = riotSummonerClient.getSummonerById(queue.id);
@@ -105,7 +105,6 @@ public class MatchFetchService {
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processSummoner(RedisQueueService.QueueTask queue) {
         log.info("Fetching ALL match IDs for PUUID={} since Season Start (Apr 15)", queue.id);
         
@@ -148,7 +147,6 @@ public class MatchFetchService {
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processMatch(RedisQueueService.QueueTask queue) {
         log.info("Fetching details for MatchID={}", queue.id);
         RiotMatchDetailResponse response = riotMatchClient.fetchMatchDetail(queue.id);

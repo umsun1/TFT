@@ -49,7 +49,8 @@ public class MatchServiceImp implements MatchService {
     @Value("${riot.api.key}")
     private String apiKey;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @org.springframework.beans.factory.annotation.Autowired
+    private RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
@@ -70,7 +71,7 @@ public class MatchServiceImp implements MatchService {
         headers.set("X-Riot-Token", apiKey);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        long seasonStartEpoch = 1776178800L; // 2026년 4월 15일 기준
+        long seasonStartEpoch = 1787691600L; // 2026년 8월 26일 기준
 
         try {
             // startTime을 추가하여 전시즌 데이터 유입 방지
@@ -100,6 +101,12 @@ public class MatchServiceImp implements MatchService {
             }
         }
         return result;
+    }
+
+    @Override
+    public MatchApiDto getMatchDetailById(String matchId, String myPuuid) {
+        // 기존 로직 재사용: DB(findByGaId) 우선 조회 -> 없으면 Riot API 호출
+        return getSingleMatchDetail(matchId, myPuuid != null ? myPuuid : "");
     }
 
     private MatchApiDto getSingleMatchDetail(String matchId, String myPuuid) {
@@ -246,16 +253,48 @@ public class MatchServiceImp implements MatchService {
                     if (unit.getCharacterId().toLowerCase().contains("atakhan")) continue;
 
                     unit.setChampionImg(tftStaticDataService.getUnitImgUrl(unit.getCharacterId()));
+                    com.tft.web.service.TftStaticDataServiceImp.UnitDetailData detail = tftStaticDataService.getUnitDetail(unit.getCharacterId());
+                    if (detail != null) {
+                        unit.setDescription(detail.desc);
+                        unit.setSkillName(detail.skillName);
+                        // 스킬 아이콘: PBE가 불안정하므로 latest로 원복하고 초상화 땜빵 제거.
+                        String skillIconUrl = detail.skillIcon != null && !detail.skillIcon.isEmpty() ? "https://raw.communitydragon.org/latest/game/" + detail.skillIcon.toLowerCase().replace(".dds", ".png").replace(".tex", ".png") : "";
+                        unit.setSkillIcon(skillIconUrl);
+                        unit.setInitialMana(detail.initialMana);
+                        unit.setMana(detail.mana);
+                        unit.setRange(detail.range);
+                        
+                        // CDragon 영문 식별자를 한글 시너지명으로 매핑 (TraitDto 같은 구조 활용)
+                        if (detail.traits != null) {
+                            java.util.List<String> korTraits = new java.util.ArrayList<>();
+                            java.util.List<String> traitUrls = new java.util.ArrayList<>();
+                            for (String tr : detail.traits) {
+                                String fullTraitId = tftStaticDataService.findTraitIdByAlias(tr);
+                                if (fullTraitId != null) {
+                                    korTraits.add(tftStaticDataService.getTraitKoName(fullTraitId));
+                                    traitUrls.add(tftStaticDataService.getTraitIconUrl(fullTraitId));
+                                } else {
+                                    korTraits.add(tr);
+                                    traitUrls.add("https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/ux/tft/traiticons/trait_icon_tft.png");
+                                }
+                            }
+                            unit.setTraits(korTraits);
+                            unit.setTraitIconUrls(traitUrls);
+                        }
+                    }
                     
                     if (unit.getItems() != null && !unit.getItems().isEmpty()) {
                         List<String> itemUrls = new ArrayList<>();
                         List<String> itemKoNames = new ArrayList<>();
+                        List<String> itemDescs = new ArrayList<>();
                         for (String itemName : unit.getItems()) {
                             itemUrls.add(tftStaticDataService.getItemImgUrlByName(itemName));
                             itemKoNames.add(tftStaticDataService.getItemKoName(itemName));
+                            itemDescs.add(tftStaticDataService.getItemDesc(itemName));
                         }
                         unit.setItemImgUrls(itemUrls);
                         unit.setItems(itemKoNames);
+                        unit.setItemDescriptions(itemDescs);
                     }
                     unit.setChampionName(tftStaticDataService.getUnitKoName(unit.getCharacterId()));
                     processedUnits.add(unit);
@@ -273,6 +312,7 @@ public class MatchServiceImp implements MatchService {
                     .peek(t -> {
                         t.setIconUrl(tftStaticDataService.getTraitIconUrl(t.getName()));
                         t.setBgUrl(getSynergyBgUrl(t.getStyle()));
+                        t.setDescription(tftStaticDataService.getTraitDesc(t.getName()));
                         t.setName(tftStaticDataService.getTraitKoName(t.getName()));
                     })
                     .sorted(Comparator.comparingInt(t -> priorityMap.getOrDefault(t.getStyle(), 99)))

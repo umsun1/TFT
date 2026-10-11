@@ -21,9 +21,19 @@ public class UnitDto {
     
     private String championImg;
     private String championName;
+    private String description;
+    private String skillName;
+    private String skillIcon;
+    private int initialMana;
+    private int mana;
+    private int range;
+    private List<String> traits;
+    private List<String> traitIconUrls;
     
     @JsonProperty("itemNames")
     private List<String> items;
+    
+    private List<String> itemDescriptions;
     
     private List<String> itemImgUrls;
 }
