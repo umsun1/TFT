@@ -24,7 +24,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "participant")
+// 전적 조회는 항상 소환사(puuid) 기준이므로 인덱스를 둔다. 없으면 참가 기록 전체를 훑는다.
+@Table(name = "participant", indexes = @jakarta.persistence.Index(name = "idx_participant_puuid", columnList = "PA_PUUID"))
 public class Participant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

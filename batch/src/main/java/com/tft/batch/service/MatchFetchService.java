@@ -19,6 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MatchFetchService {
 
+    // 일시적 오류(5xx, 네트워크)로 같은 작업을 다시 시도하는 최대 횟수
+    static final int MAX_RETRIES = 3;
+
     private final RedisQueueService redisQueueService;
     private final RiotMatchClient riotMatchClient;
     private final RiotSummonerClient riotSummonerClient;
@@ -55,7 +58,7 @@ public class MatchFetchService {
             } else if ("SUMMONER_ID".equals(queue.type)) {
                 processSummonerId(queue);
             }
-            // ZSet에서 이미 Pop 되었으므로 DONE 처리는 별도로 필요하지 않습니다.
+            redisQueueService.clearRetry(queue);
         } catch (HttpClientErrorException.TooManyRequests e) {
             // 차단 시간은 인터셉터가 이미 기록했습니다. 작업만 같은 우선순위로 되돌리고 스레드는 바로 반환합니다.
             redisQueueService.pushTask(queue.id, queue.type, queue.priority);
@@ -63,9 +66,20 @@ public class MatchFetchService {
             // 작업 도중 한도가 찬 경우(매치 목록을 여러 번 조회하는 작업 등): 되돌려 두고 다음 주기에 다시 시도합니다.
             log.info("Riot rate limit budget exhausted while processing {}. Re-queued.", queue.id);
             redisQueueService.pushTask(queue.id, queue.type, queue.priority);
-        } catch (Exception e) {
+        } catch (HttpClientErrorException e) {
+            // 404(없는 매치) 같은 4xx는 다시 해도 결과가 같으므로 재시도하지 않고 실패 목록에 보관합니다.
             log.error("Error processing queue {}: {}", queue.id, e.getMessage());
-            // 에러 발생 시 버려지거나 데드레터 큐로 보냄 (현재는 로그만 남김)
+            redisQueueService.markFailed(queue, e.getStatusCode().toString());
+        } catch (Exception e) {
+            // 5xx, 네트워크 오류 등 일시적일 수 있는 오류: 횟수를 세며 재등록하고, 한도를 넘으면 실패 목록에 보관합니다.
+            long attempt = redisQueueService.incrementRetry(queue);
+            if (attempt <= MAX_RETRIES) {
+                log.warn("Error processing queue {} (attempt {}/{}): {}", queue.id, attempt, MAX_RETRIES, e.getMessage());
+                redisQueueService.pushTask(queue.id, queue.type, queue.priority);
+            } else {
+                log.error("Error processing queue {}: {}. Giving up after {} retries.", queue.id, e.getMessage(), MAX_RETRIES);
+                redisQueueService.markFailed(queue, String.valueOf(e.getMessage()));
+            }
         }
     }
 

@@ -11,6 +11,8 @@ public class RedisQueueService {
 
     private final StringRedisTemplate redisTemplate;
     private static final String QUEUE_KEY = "tft:queue:ready";
+    private static final String RETRY_KEY = "tft:queue:retries";
+    private static final String FAILED_KEY = "tft:queue:failed";
 
     /**
      * 작업을 큐에 밀어 넣습니다.
@@ -36,6 +38,27 @@ public class RedisQueueService {
             return null;
 
         return new QueueTask(parts[1], parts[0], tuple.getScore());
+    }
+
+    /**
+     * 실패 횟수를 1 올리고 올린 뒤의 값을 반환합니다.
+     */
+    public long incrementRetry(QueueTask task) {
+        Long count = redisTemplate.opsForHash().increment(RETRY_KEY, task.type + ":" + task.id, 1);
+        return count == null ? 1 : count;
+    }
+
+    public void clearRetry(QueueTask task) {
+        redisTemplate.opsForHash().delete(RETRY_KEY, task.type + ":" + task.id);
+    }
+
+    /**
+     * 더 재시도하지 않을 작업을 실패 목록에 보관합니다. (원인 확인 후 수동 재등록용)
+     */
+    public void markFailed(QueueTask task, String reason) {
+        String field = task.type + ":" + task.id;
+        redisTemplate.opsForHash().put(FAILED_KEY, field, java.time.LocalDateTime.now() + " " + reason);
+        redisTemplate.opsForHash().delete(RETRY_KEY, field);
     }
 
     /**
