@@ -47,7 +47,7 @@ public class TftStaticDataServiceImp implements TftStaticDataService {
 
     private Map<String, UnitDetailData> unitDetailMap = new HashMap<>();
 
-    private final String VERSION = "16.8.1";
+    private final String VERSION = "16.18.1";
 
     @PostConstruct
     public void init() {

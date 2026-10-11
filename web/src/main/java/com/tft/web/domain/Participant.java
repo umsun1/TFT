@@ -21,7 +21,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @Table(name = "participant")
 public class Participant {
@@ -40,7 +41,7 @@ public class Participant {
     @Column(name = "PA_NAME", nullable = false, length = 50)
     private String paName;
 
-    @Column(name = "PA_TAG", nullable = false, length = 10)
+    @Column(name = "PA_TAG", nullable = false, length = 30)
     private String paTag;
 
     @Column(name = "PA_COMPANION_ID")

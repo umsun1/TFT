@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class RedisQueueService {
-    
+
     private final StringRedisTemplate redisTemplate;
     private static final String QUEUE_KEY = "tft:queue:ready";
 
@@ -32,7 +32,8 @@ public class RedisQueueService {
 
         String value = tuple.getValue();
         String[] parts = value.split(":", 2);
-        if (parts.length != 2) return null;
+        if (parts.length != 2)
+            return null;
 
         return new QueueTask(parts[1], parts[0], tuple.getScore());
     }

@@ -57,7 +57,8 @@ public class HighTierCollectorService {
                 List<TftLeagueEntryDto> emeraldEntries = riotLeagueClient.getLeagueEntries("EMERALD", "I");
                 if (emeraldEntries != null && !emeraldEntries.isEmpty()) {
                     // 상위 일부만 수집 (너무 많으면 API 할당량 초과 위험)
-                    List<TftLeagueEntryDto> limitedEntries = emeraldEntries.subList(0, Math.min(emeraldEntries.size(), 200));
+                    List<TftLeagueEntryDto> limitedEntries = emeraldEntries.subList(0,
+                            Math.min(emeraldEntries.size(), 200));
                     collectLeagueEntries(limitedEntries, "EMERALD", 50);
                 }
             } catch (Exception e) {
@@ -102,7 +103,7 @@ public class HighTierCollectorService {
             item.setLosses(entry.getLosses());
             item.setRank(entry.getRank());
             // PUUID는 Entries API 결과에 없을 수 있으므로 ID 변환 큐를 타게 됨
-            
+
             if (processEntry(item, tierName, priority)) {
                 count++;
             }
@@ -120,7 +121,7 @@ public class HighTierCollectorService {
                 log.error("Failed to save LP history for {}: {}", entry.getPuuid(), e.getMessage());
             }
             return true;
-        } 
+        }
         // Case 2: SummonerID만 있는 경우
         else if (entry.getSummonerId() != null) {
             redisQueueService.pushTask(entry.getSummonerId(), "SUMMONER_ID", priority);
@@ -130,7 +131,8 @@ public class HighTierCollectorService {
     }
 
     private void saveLpHistory(TftLeagueItemDto entry, String tier) {
-        com.tft.batch.model.entity.LpHistory lastRecord = lpHistoryRepository.findTopByPuuidOrderByCreatedAtDesc(entry.getPuuid());
+        com.tft.batch.model.entity.LpHistory lastRecord = lpHistoryRepository
+                .findTopByPuuidOrderByCreatedAtDesc(entry.getPuuid());
 
         boolean needUpdate = false;
         int iconId = 29; // 기본 아이콘 지정
@@ -140,7 +142,8 @@ public class HighTierCollectorService {
             iconId = fetchIconIdSafely(entry.getPuuid());
         } else {
             // 이미 수집된 아이콘이 있으면 재사용, 없으면 수집
-            iconId = lastRecord.getProfileIconId() > 0 ? lastRecord.getProfileIconId() : fetchIconIdSafely(entry.getPuuid());
+            iconId = lastRecord.getProfileIconId() > 0 ? lastRecord.getProfileIconId()
+                    : fetchIconIdSafely(entry.getPuuid());
 
             // 점수나 티어가 바뀌었을 때만 저장
             if (lastRecord.getLp() != entry.getLeaguePoints() || !lastRecord.getTier().equals(tier)) {
@@ -173,7 +176,7 @@ public class HighTierCollectorService {
     private int fetchIconIdSafely(String puuid) {
         try {
             // 라이엇 API 제한(2분에 100회=1.2초당 1회)을 매우 안전하게 우회하기 위해 1.5초 대기
-            Thread.sleep(1500); 
+            Thread.sleep(1500);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

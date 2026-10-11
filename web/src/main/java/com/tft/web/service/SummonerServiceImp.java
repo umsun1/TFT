@@ -7,20 +7,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import com.tft.web.domain.LpHistory;
 import com.tft.web.domain.Participant;
@@ -36,12 +29,9 @@ import com.tft.web.repository.ParticipantRepository;
 @org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class SummonerServiceImp implements SummonerService {
 
-    @Value("${riot.api.key}")
-    private String apiKey;
-
-    // [추가] 단순 메모리 캐시 (API 호출 최소화)
-    private final Map<String, RiotAccountDto> accountCache = new ConcurrentHashMap<>();
-    private final Map<String, TftLeagueEntryDto> leagueCache = new ConcurrentHashMap<>();
+    // Riot API 호출 + Redis 캐시 (cache:account / cache:league / cache:summoner)
+    @Autowired
+    private RiotSummonerApiClient riotApiClient;
 
     @Autowired
     private ParticipantRepository participantRepository;
@@ -52,44 +42,41 @@ public class SummonerServiceImp implements SummonerService {
     @Autowired
     private LpHistoryRepository lpHistoryRepository;
 
-    private final RestTemplate restTemplate = new RestTemplate();
-
     @Override
     @org.springframework.transaction.annotation.Transactional
     public SummonerProfileDto getSummonerData(String server, String gameName, String tagLine, Integer queueId) {
-        String cacheKey = gameName + "#" + tagLine;
-
-        // 1. Riot ID → Account (캐시 확인)
-        RiotAccountDto account = accountCache.get(cacheKey);
-        if (account == null) {
-            account = getAccountByRiotId(gameName, tagLine);
-            if (account == null)
-                return null;
-            accountCache.put(cacheKey, account);
-        }
+        // 1. Riot ID → Account (Redis cache:account, 24h, 키는 소문자)
+        RiotAccountDto account = riotApiClient.getAccountByRiotId(gameName, tagLine);
+        if (account == null)
+            return null;
         String puuid = account.getPuuid();
 
-        // 병렬 처리 1 (소환사 리그 정보)
-        CompletableFuture<TftLeagueEntryDto> leagueFuture = CompletableFuture.supplyAsync(() -> {
-            // 캐시에 저장되어 있는지 확인
-            TftLeagueEntryDto cached = leagueCache.get(puuid);
-            if (cached != null)
-                return cached;
-            // API 호출
-            TftLeagueEntryDto league = getTftLeagueByPuuid(puuid);
-            if (league != null)
-                leagueCache.put(puuid, league);
-            return league;
-        });
-        // 병렬 처리 2 (소환사 레벨 및 아이콘)
+        // 병렬 처리 1 (소환사 리그 정보 - Redis cache:league, 2m)
+        CompletableFuture<TftLeagueEntryDto> leagueFuture = CompletableFuture
+                .supplyAsync(() -> riotApiClient.getTftLeagueByPuuid(puuid));
+        // 병렬 처리 2 (소환사 레벨 및 아이콘 - Redis cache:summoner, 10m)
         CompletableFuture<SummonerDto> summonerFuture = CompletableFuture
-                .supplyAsync(() -> getTftSummonerByPuuid(puuid));
+                .supplyAsync(() -> riotApiClient.getTftSummonerByPuuid(puuid));
 
         // 큐 등록 (상태 갱신만 수행, DB 쓰기 발생)
         updateFetchQueue(puuid);
 
-        TftLeagueEntryDto league = leagueFuture.join();
-        SummonerDto summoner = summonerFuture.join();
+        TftLeagueEntryDto league;
+        SummonerDto summoner;
+        try {
+            league = leagueFuture.join();
+            summoner = summonerFuture.join();
+        } catch (CompletionException e) {
+            // 캐시된 puuid 로 조회했는데 400/404 → puuid 가 유효하지 않음(API 키 프로젝트 변경 등).
+            // 다음 검색 때 다시 조회하도록 계정 캐시를 비운다.
+            if (e.getCause() instanceof HttpClientErrorException.BadRequest
+                    || e.getCause() instanceof HttpClientErrorException.NotFound) {
+                riotApiClient.evictAccount(gameName, tagLine);
+            }
+            if (e.getCause() instanceof RuntimeException re)
+                throw re;
+            throw e;
+        }
 
         // 4. 데이터 조립
         SummonerProfileDto profile = new SummonerProfileDto();
@@ -319,73 +306,10 @@ public class SummonerServiceImp implements SummonerService {
         return baseScore + rankScore + lp;
     }
 
-    // 닉네임 + 태그라인 -> PUUID
+    // 닉네임 + 태그라인 -> PUUID (Redis cache:account 경유)
+    @Override
     public RiotAccountDto getAccountByRiotId(String gameName, String tagLine) {
-        String url = "https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/" + gameName + "/" + tagLine;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Riot-Token", apiKey);
-
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<RiotAccountDto> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                entity,
-                RiotAccountDto.class);
-        System.out.println(response.getBody());
-        return response.getBody();
-    }
-
-    // PUUID -> TFT 관련 프로필
-    public TftLeagueEntryDto getTftLeagueByPuuid(String puuid) {
-        String url = "https://kr.api.riotgames.com/tft/league/v1/by-puuid/" + puuid;
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Riot-Token", apiKey);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        // List<TftLeagueEntryDto> 형태로 받아야 합니다.
-
-        try {
-            ResponseEntity<List<TftLeagueEntryDto>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    new ParameterizedTypeReference<List<TftLeagueEntryDto>>() {
-                    });
-
-            List<TftLeagueEntryDto> results = response.getBody();
-            if (results == null || results.isEmpty())
-                return null;
-
-            // RANKED_TFT (솔로 랭크)를 우선적으로 찾음
-            return results.stream()
-                    .filter(league -> "RANKED_TFT".equals(league.getQueueType()))
-                    .findFirst()
-                    .orElse(results.get(0)); // 솔랭이 없으면 첫 번째 정보라도 반환
-        } catch (HttpClientErrorException.TooManyRequests e) {
-            String retryAfter = e.getResponseHeaders().getFirst("Retry-After");
-            System.err.println("매치 상세 조회 실패: " + retryAfter + "후에 다시 시도 하시오.");
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    // PUUID -> 소환사 레벨, 아이콘
-    public SummonerDto getTftSummonerByPuuid(String puuid) {
-        String url = "https://kr.api.riotgames.com/tft/summoner/v1/summoners/by-puuid/" + puuid;
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Riot-Token", apiKey);
-
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<SummonerDto> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                entity,
-                SummonerDto.class);
-        System.out.println(response.getBody());
-        return response.getBody();
+        return riotApiClient.getAccountByRiotId(gameName, tagLine);
     }
 
     // 플레이어 평균 등수 계산
