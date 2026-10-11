@@ -1,0 +1,299 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.8)
+
+2026-10-11T19:44:31.767+09:00  INFO 10504 --- [batch] [           main] com.tft.batch.BatchApplication           : Starting BatchApplication v0.0.1-SNAPSHOT using Java 17.0.12 with PID 10504 (C:\Users\user\AppData\Local\Temp\claude\C--Users-user-Desktop-dev\8ae657ce-8c3b-4b35-899e-969d6e3d3932\scratchpad\rl\batch-1s.jar started by user in C:\Users\user\AppData\Local\Temp\claude\C--Users-user-Desktop-dev\8ae657ce-8c3b-4b35-899e-969d6e3d3932\scratchpad\rl)
+2026-10-11T19:44:31.770+09:00  INFO 10504 --- [batch] [           main] com.tft.batch.BatchApplication           : No active profile set, falling back to 1 default profile: "default"
+2026-10-11T19:44:32.320+09:00  INFO 10504 --- [batch] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-10-11T19:44:32.321+09:00  INFO 10504 --- [batch] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-11T19:44:32.436+09:00  INFO 10504 --- [batch] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 107 ms. Found 4 JPA repository interfaces.
+2026-10-11T19:44:32.450+09:00  INFO 10504 --- [batch] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-10-11T19:44:32.451+09:00  INFO 10504 --- [batch] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-10-11T19:44:32.467+09:00  INFO 10504 --- [batch] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.tft.batch.repository.GameInfoRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-10-11T19:44:32.467+09:00  INFO 10504 --- [batch] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.tft.batch.repository.LpHistoryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-10-11T19:44:32.467+09:00  INFO 10504 --- [batch] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.tft.batch.repository.MetaDeckRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-10-11T19:44:32.467+09:00  INFO 10504 --- [batch] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.tft.batch.repository.ParticipantRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-10-11T19:44:32.467+09:00  INFO 10504 --- [batch] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2026-10-11T19:44:32.550+09:00  WARN 10504 --- [batch] [           main] o.m.s.mapper.ClassPathMapperScanner      : No MyBatis mapper was found in '[com.tft.batch]' package. Please check your configuration.
+2026-10-11T19:44:32.886+09:00  INFO 10504 --- [batch] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8091 (http)
+2026-10-11T19:44:32.895+09:00  INFO 10504 --- [batch] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-11T19:44:32.895+09:00  INFO 10504 --- [batch] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.49]
+2026-10-11T19:44:32.918+09:00  INFO 10504 --- [batch] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-11T19:44:32.919+09:00  INFO 10504 --- [batch] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1104 ms
+2026-10-11T19:44:33.049+09:00  INFO 10504 --- [batch] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-10-11T19:44:33.096+09:00  INFO 10504 --- [batch] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.36.Final
+2026-10-11T19:44:33.125+09:00  INFO 10504 --- [batch] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-10-11T19:44:33.388+09:00  INFO 10504 --- [batch] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-11T19:44:33.418+09:00  INFO 10504 --- [batch] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-11T19:44:33.557+09:00  INFO 10504 --- [batch] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1884e671
+2026-10-11T19:44:33.558+09:00  INFO 10504 --- [batch] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-10-11T19:44:33.613+09:00  INFO 10504 --- [batch] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.45
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-10-11T19:44:34.257+09:00  INFO 10504 --- [batch] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-10-11T19:44:34.323+09:00  INFO 10504 --- [batch] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-11T19:44:34.794+09:00  INFO 10504 --- [batch] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-10-11T19:44:35.195+09:00  WARN 10504 --- [batch] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-10-11T19:44:35.514+09:00  INFO 10504 --- [batch] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8091 (http) with context path '/'
+2026-10-11T19:44:35.528+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.scheduler.LpUpdateScheduler  : Starting LP Update Scheduler...
+2026-10-11T19:44:35.531+09:00  INFO 10504 --- [batch] [           main] com.tft.batch.BatchApplication           : Started BatchApplication in 4.104 seconds (process running for 4.455)
+2026-10-11T19:44:35.533+09:00  INFO 10504 --- [batch] [           main] c.t.b.s.HighTierCollectorScheduler       : Triggering initial High Tier Collection...
+2026-10-11T19:44:35.533+09:00  INFO 10504 --- [batch] [           main] c.t.b.s.HighTierCollectorScheduler       : Scheduled task: Collecting high tier players
+2026-10-11T19:44:35.538+09:00  INFO 10504 --- [batch] [           main] c.t.b.service.HighTierCollectorService   : Starting High Tier player collection...
+2026-10-11T19:44:35.538+09:00  INFO 10504 --- [batch] [           main] com.tft.batch.client.RiotLeagueClient    : Calling Riot API: https://kr.api.riotgames.com/tft/league/v1/challenger?api_key=REDACTED
+2026-10-11T19:44:35.642+09:00  INFO 10504 --- [batch] [   scheduling-1] com.tft.batch.service.LpUpdateService    : Found 0 active summoners to track LP.
+2026-10-11T19:44:35.647+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.scheduler.LpUpdateScheduler  : LP Update Scheduler finished.
+2026-10-11T19:44:35.649+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:36.019+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=xoQ-5Blo2cAHIgo82bWk4Ib8o29Umx1uYKNJqic7HThNSkDZybmWD5GMIAgyneLhCOvUojvvJbIahw since Season Start (Apr 15)
+2026-10-11T19:44:36.106+09:00  INFO 10504 --- [batch] [           main] com.tft.batch.client.RiotLeagueClient    : Raw JSON Response (first 500 chars): {"tier":"CHALLENGER","queue":"RANKED_TFT","entries":[{"puuid":"SE0qbyvYur-2u2RCuriA186kAIiIIAbQabO8tYwp1k5QVfk7ABFTcr_2bQDh_5vS5bosFaY7MlatGA","leaguePoints":1756,"rank":"I","wins":306,"losses":165,"veteran":true,"inactive":false,"freshBlood":false,"hotStreak":false},{"puuid":"25Mmo88dB2oDUsnybf6st7R43-pgZ3tQobNuV3nLY_7HR4pPEqaVFD0ctiMMaD_Y0KNMbAeSe2e9xg","leaguePoints":1710,"rank":"I","wins":327,"losses":215,"veteran":true,"inactive":false,"freshBlood":false,"hotStreak":true},{"puuid":"7thjivOe
+2026-10-11T19:44:36.142+09:00  INFO 10504 --- [batch] [           main] c.t.b.service.HighTierCollectorService   : Sample first entry puuid: SE0qbyvYur-2u2RCuriA186kAIiIIAbQabO8tYwp1k5QVfk7ABFTcr_2bQDh_5vS5bosFaY7MlatGA
+2026-10-11T19:44:36.686+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for xoQ-5Blo2cAHIgo82bWk4Ib8o29Umx1uYKNJqic7HThNSkDZybmWD5GMIAgyneLhCOvUojvvJbIahw: 748
+2026-10-11T19:44:37.150+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 687 matches for fetching.
+2026-10-11T19:44:38.155+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:38.159+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=ymg-cFmpmNmx4hPAV5PgYsoiftHBIdc7rsAxPjZdaUw3BncvJJORHa5hxzLL8_b9921tsDL1VEn94g since Season Start (Apr 15)
+2026-10-11T19:44:38.903+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for ymg-cFmpmNmx4hPAV5PgYsoiftHBIdc7rsAxPjZdaUw3BncvJJORHa5hxzLL8_b9921tsDL1VEn94g: 985
+2026-10-11T19:44:39.398+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 860 matches for fetching.
+2026-10-11T19:44:40.406+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:40.409+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=zTt2y4TOFw-CtMWGRjll96qWDSvnLFHC8138aNTetTmV0hVGrd8e678eK1iuG5CruwiJ57VC9BJ5Gw since Season Start (Apr 15)
+2026-10-11T19:44:40.830+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for zTt2y4TOFw-CtMWGRjll96qWDSvnLFHC8138aNTetTmV0hVGrd8e678eK1iuG5CruwiJ57VC9BJ5Gw: 498
+2026-10-11T19:44:41.100+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 445 matches for fetching.
+2026-10-11T19:44:42.115+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:42.118+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=ypfYilhcQTaf7huqlVpdovIN4SZLXoJL3UJJTpdFuy7kKYmCUBxsQTAGrWTZoMf3Nhj0Ce2wWIb8yQ since Season Start (Apr 15)
+2026-10-11T19:44:42.784+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for ypfYilhcQTaf7huqlVpdovIN4SZLXoJL3UJJTpdFuy7kKYmCUBxsQTAGrWTZoMf3Nhj0Ce2wWIb8yQ: 802
+2026-10-11T19:44:43.223+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 778 matches for fetching.
+2026-10-11T19:44:44.237+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:44.240+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=yJC2DVGbB5dLCYJg8xYYHceAepILrecaBd6gSEgasQdUxM-BChpLiJY0kD_IosF4IMC0CXvwfCZn4A since Season Start (Apr 15)
+2026-10-11T19:44:45.109+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for yJC2DVGbB5dLCYJg8xYYHceAepILrecaBd6gSEgasQdUxM-BChpLiJY0kD_IosF4IMC0CXvwfCZn4A: 1000
+2026-10-11T19:44:45.649+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 949 matches for fetching.
+2026-10-11T19:44:46.664+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:46.667+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=zDk-041VrA_GlZUM7HO0q8yDEb4IuLcM8I3MY9U4ceRtZ86i3qamAqoHOue7Kb3iI-C0yUt70eGifg since Season Start (Apr 15)
+2026-10-11T19:44:47.389+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for zDk-041VrA_GlZUM7HO0q8yDEb4IuLcM8I3MY9U4ceRtZ86i3qamAqoHOue7Kb3iI-C0yUt70eGifg: 854
+2026-10-11T19:44:47.841+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 817 matches for fetching.
+2026-10-11T19:44:48.847+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:48.850+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=y53snDZFBHh9FPCr9rRhQxa8X0VjxTSl3033pwdggxN6G6LwZU91q25YzqgTUolH97_5EEt3MjFwzg since Season Start (Apr 15)
+2026-10-11T19:44:49.597+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for y53snDZFBHh9FPCr9rRhQxa8X0VjxTSl3033pwdggxN6G6LwZU91q25YzqgTUolH97_5EEt3MjFwzg: 907
+2026-10-11T19:44:50.008+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 733 matches for fetching.
+2026-10-11T19:44:51.024+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:51.027+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=xyR6f0w4p6q06Dj-6_jM2oCBEQ5TufixnzWZPedE0F__zwdc1kHD82iV3p6bczOSGx4VVIQoPr3jGg since Season Start (Apr 15)
+2026-10-11T19:44:51.858+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for xyR6f0w4p6q06Dj-6_jM2oCBEQ5TufixnzWZPedE0F__zwdc1kHD82iV3p6bczOSGx4VVIQoPr3jGg: 1000
+2026-10-11T19:44:52.366+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 918 matches for fetching.
+2026-10-11T19:44:53.381+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:53.384+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=xgStH1Z88Aqemh2de15PgG8qtWHDw_-IM9y2OQ7Co5Yniup3vn2iBy8nIbIatMNgz56LujHTRXM0AQ since Season Start (Apr 15)
+2026-10-11T19:44:54.187+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for xgStH1Z88Aqemh2de15PgG8qtWHDw_-IM9y2OQ7Co5Yniup3vn2iBy8nIbIatMNgz56LujHTRXM0AQ: 1000
+2026-10-11T19:44:54.718+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 940 matches for fetching.
+2026-10-11T19:44:55.725+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:55.728+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=z9eqJ1Qa7L21pghxrki1wi_QvuMrzfNw6OSYJwVnPp8fdhRGzBHzIkSTeKLPjvo7Tb7HM6g_ypxxWQ since Season Start (Apr 15)
+2026-10-11T19:44:56.222+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for z9eqJ1Qa7L21pghxrki1wi_QvuMrzfNw6OSYJwVnPp8fdhRGzBHzIkSTeKLPjvo7Tb7HM6g_ypxxWQ: 693
+2026-10-11T19:44:56.582+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 687 matches for fetching.
+2026-10-11T19:44:57.595+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:57.598+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=ygUxh0ukI5cABGw8yRPgKaSv2gSz1XYHa8qm06FiQhDiphuMiFj40qlyKL8E5nntiSHCXDeWednWIQ since Season Start (Apr 15)
+2026-10-11T19:44:57.930+09:00  INFO 10504 --- [batch] [           main] c.t.b.service.HighTierCollectorService   : Added 400 new players to queue from CHALLENGER
+2026-10-11T19:44:57.930+09:00  INFO 10504 --- [batch] [           main] com.tft.batch.client.RiotLeagueClient    : Calling Riot API: https://kr.api.riotgames.com/tft/league/v1/grandmaster?api_key=REDACTED
+2026-10-11T19:44:58.237+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for ygUxh0ukI5cABGw8yRPgKaSv2gSz1XYHa8qm06FiQhDiphuMiFj40qlyKL8E5nntiSHCXDeWednWIQ: 811
+2026-10-11T19:44:58.338+09:00  INFO 10504 --- [batch] [           main] c.t.b.service.HighTierCollectorService   : Sample first entry puuid: gJWcXxHusAB5rWbW4emqvDJRIXrPIAxA794DgIWOKFH9V3XKlOc_IwxYz0jY5RJLYR4e8Zc2VO0g-w
+2026-10-11T19:44:58.637+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 737 matches for fetching.
+2026-10-11T19:44:59.640+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:44:59.643+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=xoQ-5Blo2cAHIgo82bWk4Ib8o29Umx1uYKNJqic7HThNSkDZybmWD5GMIAgyneLhCOvUojvvJbIahw since Season Start (Apr 15)
+2026-10-11T19:44:59.704+09:00  WARN 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Rate limit exceeded. Waiting based on Retry-After header...
+2026-10-11T19:46:38.724+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:38.727+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=xoQ-5Blo2cAHIgo82bWk4Ib8o29Umx1uYKNJqic7HThNSkDZybmWD5GMIAgyneLhCOvUojvvJbIahw since Season Start (Apr 15)
+2026-10-11T19:46:39.322+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for xoQ-5Blo2cAHIgo82bWk4Ib8o29Umx1uYKNJqic7HThNSkDZybmWD5GMIAgyneLhCOvUojvvJbIahw: 748
+2026-10-11T19:46:39.700+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 687 matches for fetching.
+2026-10-11T19:46:40.706+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:40.708+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=xbh-OwldHGKWxJecb7ZNB5MFvzoNQUQrJkN7_AHwS90Xs53zVsYrmJrSRcgDeNpSGXM-aL-AwpFV5A since Season Start (Apr 15)
+2026-10-11T19:46:41.088+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for xbh-OwldHGKWxJecb7ZNB5MFvzoNQUQrJkN7_AHwS90Xs53zVsYrmJrSRcgDeNpSGXM-aL-AwpFV5A: 530
+2026-10-11T19:46:41.381+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 529 matches for fetching.
+2026-10-11T19:46:42.393+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:42.395+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=xZdFrAGI4HZHn95RK9qIKUxYcs_BrkQMd0mgKdlsyaGTqcH1oyBC_SN3O9KqlAE4ePT4WzjQ2MirjA since Season Start (Apr 15)
+2026-10-11T19:46:43.149+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for xZdFrAGI4HZHn95RK9qIKUxYcs_BrkQMd0mgKdlsyaGTqcH1oyBC_SN3O9KqlAE4ePT4WzjQ2MirjA: 1000
+2026-10-11T19:46:43.633+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 899 matches for fetching.
+2026-10-11T19:46:44.646+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:44.649+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=xX6JYEDCgqs2nE8Npw5qZSPO5h_Dj0UHoXG0esUsvSzTfJ1_o6z0Ybc-IaxdBGmwM9gfzrikInx0eg since Season Start (Apr 15)
+2026-10-11T19:46:45.401+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for xX6JYEDCgqs2nE8Npw5qZSPO5h_Dj0UHoXG0esUsvSzTfJ1_o6z0Ybc-IaxdBGmwM9gfzrikInx0eg: 1000
+2026-10-11T19:46:45.866+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 872 matches for fetching.
+2026-10-11T19:46:46.876+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:46.879+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=xE9cHKyoxmlAdC4Z1AxhuqN4nY9Ltu6Jrd9QbZsmtiFY0iBGFEWWRenVIJQ4_46_WVpoUpTNOOhVnw since Season Start (Apr 15)
+2026-10-11T19:46:47.259+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for xE9cHKyoxmlAdC4Z1AxhuqN4nY9Ltu6Jrd9QbZsmtiFY0iBGFEWWRenVIJQ4_46_WVpoUpTNOOhVnw: 378
+2026-10-11T19:46:47.452+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 351 matches for fetching.
+2026-10-11T19:46:48.459+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:48.461+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=xADmn5hcxlvS6cJ53AKsA8YeDdH1dfU91TEq5SRax3lAFkmRgoWXpk3pXA7r3Jt3X5xubnknYCelWw since Season Start (Apr 15)
+2026-10-11T19:46:48.960+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for xADmn5hcxlvS6cJ53AKsA8YeDdH1dfU91TEq5SRax3lAFkmRgoWXpk3pXA7r3Jt3X5xubnknYCelWw: 693
+2026-10-11T19:46:49.293+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 626 matches for fetching.
+2026-10-11T19:46:50.307+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:50.309+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=x71Q_E0Fgu3TfdB48HnFug5E5fxfg7y_TrPOzkyc3uqOhaCaq7-_D0ezZHl6AnoaHC8uE9taUK1xfw since Season Start (Apr 15)
+2026-10-11T19:46:50.777+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for x71Q_E0Fgu3TfdB48HnFug5E5fxfg7y_TrPOzkyc3uqOhaCaq7-_D0ezZHl6AnoaHC8uE9taUK1xfw: 629
+2026-10-11T19:46:51.084+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 569 matches for fetching.
+2026-10-11T19:46:52.090+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:52.093+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=wxWviwSKCsB8fhtXcZdGk6ecr_tXxlhR9tOih1PUu-s_Aen6hnt93ShbEolSHir5WZtuac4YgZ-XBw since Season Start (Apr 15)
+2026-10-11T19:46:52.887+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for wxWviwSKCsB8fhtXcZdGk6ecr_tXxlhR9tOih1PUu-s_Aen6hnt93ShbEolSHir5WZtuac4YgZ-XBw: 1000
+2026-10-11T19:46:53.365+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 912 matches for fetching.
+2026-10-11T19:46:54.370+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:54.373+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=wvlk7BGANf27GTPU6sVfD4TA36VlQp5OL0usk9FtDyB7iOEIgwp45J1cEBN_s0H8lwQv4yatam0aig since Season Start (Apr 15)
+2026-10-11T19:46:55.108+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for wvlk7BGANf27GTPU6sVfD4TA36VlQp5OL0usk9FtDyB7iOEIgwp45J1cEBN_s0H8lwQv4yatam0aig: 1000
+2026-10-11T19:46:55.579+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 890 matches for fetching.
+2026-10-11T19:46:56.584+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:56.587+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=wp5KL6cIX7iRrX8uNvJtyHFOzflCBmSYki8pEQ7SEKA466EoUmi44o58KHOwVBRtxifBIIHduC8Dyg since Season Start (Apr 15)
+2026-10-11T19:46:57.211+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for wp5KL6cIX7iRrX8uNvJtyHFOzflCBmSYki8pEQ7SEKA466EoUmi44o58KHOwVBRtxifBIIHduC8Dyg: 884
+2026-10-11T19:46:57.670+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 846 matches for fetching.
+2026-10-11T19:46:58.678+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:46:58.680+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=wlR8pyFvDbkVe7cxgGs4PWJjCB9rU-1tdzcBfQZwXrocizRNd2RjyHbBDZpnWyS-GZhRTfczQFTy1A since Season Start (Apr 15)
+2026-10-11T19:46:59.072+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for wlR8pyFvDbkVe7cxgGs4PWJjCB9rU-1tdzcBfQZwXrocizRNd2RjyHbBDZpnWyS-GZhRTfczQFTy1A: 445
+2026-10-11T19:46:59.244+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 330 matches for fetching.
+2026-10-11T19:47:00.259+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:47:00.262+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=wX7lJHk8ZCfpXPbUkicCAcGQUTfWQespfxLdAOK-AN5gexWsRianrAK4mAc2hYL6zKHB9EeyvYmI-w since Season Start (Apr 15)
+2026-10-11T19:47:00.971+09:00  WARN 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Rate limit exceeded. Waiting based on Retry-After header...
+2026-10-11T19:47:42.479+09:00  INFO 10504 --- [batch] [           main] c.t.b.service.HighTierCollectorService   : Added 800 new players to queue from GRANDMASTER
+2026-10-11T19:47:42.479+09:00  INFO 10504 --- [batch] [           main] com.tft.batch.client.RiotLeagueClient    : Calling Riot API: https://kr.api.riotgames.com/tft/league/v1/master?api_key=REDACTED
+2026-10-11T19:47:45.026+09:00  INFO 10504 --- [batch] [           main] c.t.b.service.HighTierCollectorService   : Sample first entry puuid: YK3an0KJhT9K3arBqzmeeGOV4VwLj8JQAnOyf4dpHezoilotBQOg2h_l7YtsPZMF5N6DUvyFBuXocQ
+2026-10-11T19:48:41.996+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:48:41.999+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=wX7lJHk8ZCfpXPbUkicCAcGQUTfWQespfxLdAOK-AN5gexWsRianrAK4mAc2hYL6zKHB9EeyvYmI-w since Season Start (Apr 15)
+2026-10-11T19:48:42.826+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for wX7lJHk8ZCfpXPbUkicCAcGQUTfWQespfxLdAOK-AN5gexWsRianrAK4mAc2hYL6zKHB9EeyvYmI-w: 1000
+2026-10-11T19:48:43.307+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 894 matches for fetching.
+2026-10-11T19:48:44.323+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:48:44.326+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=wVzw3UyCiDmvnnqTtbfYn31OGpmRROMZr33SKznikhGWO0DfGuMio0UCEqFLnoqodSfTWreKrYKDZw since Season Start (Apr 15)
+2026-10-11T19:48:44.708+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for wVzw3UyCiDmvnnqTtbfYn31OGpmRROMZr33SKznikhGWO0DfGuMio0UCEqFLnoqodSfTWreKrYKDZw: 504
+2026-10-11T19:48:44.972+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 487 matches for fetching.
+2026-10-11T19:48:45.979+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:48:45.981+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=wQ0GRCQsRtKKlVF8AkcXy4M9quIoG1mazA9s3sKuF6BBiRlftuh6KJMsPxt1B44nAu7gWwtklaMnpw since Season Start (Apr 15)
+2026-10-11T19:48:46.755+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for wQ0GRCQsRtKKlVF8AkcXy4M9quIoG1mazA9s3sKuF6BBiRlftuh6KJMsPxt1B44nAu7gWwtklaMnpw: 1000
+2026-10-11T19:48:47.270+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 964 matches for fetching.
+2026-10-11T19:48:48.285+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:48:48.288+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=wEwDyT-AnqIt9dIG1MSxrvCwcitkbC9pC8xXJ6c79RFfd5LgzN16JLnRv-Ai8q9SNEZmhA_fMNrUSw since Season Start (Apr 15)
+2026-10-11T19:48:48.826+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for wEwDyT-AnqIt9dIG1MSxrvCwcitkbC9pC8xXJ6c79RFfd5LgzN16JLnRv-Ai8q9SNEZmhA_fMNrUSw: 761
+2026-10-11T19:48:49.155+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 615 matches for fetching.
+2026-10-11T19:48:50.172+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:48:50.174+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=w1m9RoYGAJHnzvkqSSvlZRsdz2i5We3jfetl6HUFvWhn07FKRWzx_fvkUwRxi1ZqNxIfNVPwjqWPEQ since Season Start (Apr 15)
+2026-10-11T19:48:50.681+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for w1m9RoYGAJHnzvkqSSvlZRsdz2i5We3jfetl6HUFvWhn07FKRWzx_fvkUwRxi1ZqNxIfNVPwjqWPEQ: 688
+2026-10-11T19:48:51.003+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 609 matches for fetching.
+2026-10-11T19:48:52.007+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:48:52.010+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=vzQ1hMpa4To7LU556QXQw1QdgqzqQkRQtf_P6LZQWivnyAJOHvPuJwls7MKqObXT_NzXVyZaEYM1rw since Season Start (Apr 15)
+2026-10-11T19:48:52.423+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for vzQ1hMpa4To7LU556QXQw1QdgqzqQkRQtf_P6LZQWivnyAJOHvPuJwls7MKqObXT_NzXVyZaEYM1rw: 567
+2026-10-11T19:48:52.683+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 490 matches for fetching.
+2026-10-11T19:48:53.695+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:48:53.697+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=vcHNchTj0s0wkBHfkwjQuIIIwz71TvJSypUYeGnos538OFLqbGs6VzY_9sdAxJTGwoTMrlLIYeMtsA since Season Start (Apr 15)
+2026-10-11T19:48:54.487+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for vcHNchTj0s0wkBHfkwjQuIIIwz71TvJSypUYeGnos538OFLqbGs6VzY_9sdAxJTGwoTMrlLIYeMtsA: 1000
+2026-10-11T19:48:54.923+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 813 matches for fetching.
+2026-10-11T19:48:55.937+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:48:55.940+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=vbS_uQrpwE9KX76qqp_at6UdNplBEceSYm1sCrH9lmoWccMGhguKM2Bh7UHtIixP-_EOJrZipSTwnw since Season Start (Apr 15)
+2026-10-11T19:48:56.557+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for vbS_uQrpwE9KX76qqp_at6UdNplBEceSYm1sCrH9lmoWccMGhguKM2Bh7UHtIixP-_EOJrZipSTwnw: 948
+2026-10-11T19:48:57.056+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 916 matches for fetching.
+2026-10-11T19:48:58.069+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:48:58.072+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=vZkKdMJkv51f2u5yP-zn5Ptms1ix9Suhivy2lC_OdwnqAmKTmvkBEk9qApCb0KAsLaRNPoS3wXwoNA since Season Start (Apr 15)
+2026-10-11T19:48:58.787+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for vZkKdMJkv51f2u5yP-zn5Ptms1ix9Suhivy2lC_OdwnqAmKTmvkBEk9qApCb0KAsLaRNPoS3wXwoNA: 953
+2026-10-11T19:48:59.220+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 815 matches for fetching.
+2026-10-11T19:49:00.236+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:49:00.238+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=vW6CJ5PX3pIzy9lCuF4Otbm_s5c8VP0NZxsfZ_U8Z6U7fGAMWSkHDxiDNHW4av_hxcHgM_g99GmSrQ since Season Start (Apr 15)
+2026-10-11T19:49:00.924+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for vW6CJ5PX3pIzy9lCuF4Otbm_s5c8VP0NZxsfZ_U8Z6U7fGAMWSkHDxiDNHW4av_hxcHgM_g99GmSrQ: 1000
+2026-10-11T19:49:01.433+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 956 matches for fetching.
+2026-10-11T19:49:02.438+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:49:02.440+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=vVJaehceHFKcIbm5gfrS6MoikmFYepNTwXxdhInzl4c_fSU9KvMau331JdPZZVTq_N8mqZPDlMKhMA since Season Start (Apr 15)
+2026-10-11T19:49:03.050+09:00  WARN 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Rate limit exceeded. Waiting based on Retry-After header...
+2026-10-11T19:50:45.064+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:50:45.067+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=vVJaehceHFKcIbm5gfrS6MoikmFYepNTwXxdhInzl4c_fSU9KvMau331JdPZZVTq_N8mqZPDlMKhMA since Season Start (Apr 15)
+2026-10-11T19:50:45.959+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for vVJaehceHFKcIbm5gfrS6MoikmFYepNTwXxdhInzl4c_fSU9KvMau331JdPZZVTq_N8mqZPDlMKhMA: 1000
+2026-10-11T19:50:46.419+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 862 matches for fetching.
+2026-10-11T19:50:47.432+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:50:47.435+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=v69gt4oIFGDSzoQGARMhAJOOnafCMchDwjhLi4JTzOuO1sXuq6vdihPdgyjHmQYk1F9UCW-JNEj_AA since Season Start (Apr 15)
+2026-10-11T19:50:47.848+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for v69gt4oIFGDSzoQGARMhAJOOnafCMchDwjhLi4JTzOuO1sXuq6vdihPdgyjHmQYk1F9UCW-JNEj_AA: 592
+2026-10-11T19:50:48.145+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 547 matches for fetching.
+2026-10-11T19:50:49.148+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:50:49.151+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=urB0jlTJVYb0OB82IEcouw81jICNlg9UPnIlNR4yC5PQEGSG2BOZTReyelx2B-t7cCIC2Cg69_r9aA since Season Start (Apr 15)
+2026-10-11T19:50:49.910+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for urB0jlTJVYb0OB82IEcouw81jICNlg9UPnIlNR4yC5PQEGSG2BOZTReyelx2B-t7cCIC2Cg69_r9aA: 1000
+2026-10-11T19:50:50.340+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 804 matches for fetching.
+2026-10-11T19:50:51.353+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:50:51.356+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=udQKP-FY0riaCHfKotjonDXIYxNbzUrgQliCWRNhg7SvHP3Y69GeOESg3fhPGHms9MPUitAHY3YiKA since Season Start (Apr 15)
+2026-10-11T19:50:52.072+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for udQKP-FY0riaCHfKotjonDXIYxNbzUrgQliCWRNhg7SvHP3Y69GeOESg3fhPGHms9MPUitAHY3YiKA: 1000
+2026-10-11T19:50:52.583+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 950 matches for fetching.
+2026-10-11T19:50:53.600+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:50:53.603+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=uRCwW4iWwpQi5kXWWr7Rc6aFOXqEGYEr9Xlx4BY9mm6eyiSqYexY33FYX2aQRMcuiPlpZ-JtLqf4ZQ since Season Start (Apr 15)
+2026-10-11T19:50:54.430+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for uRCwW4iWwpQi5kXWWr7Rc6aFOXqEGYEr9Xlx4BY9mm6eyiSqYexY33FYX2aQRMcuiPlpZ-JtLqf4ZQ: 1000
+2026-10-11T19:50:54.851+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 742 matches for fetching.
+2026-10-11T19:50:55.858+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:50:55.861+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=uLK5HYYPm6OspqcxY5X56KEHCKP5h2UjH83OkJCP3gzJe3jdHAG5LpDb1qhGsjQil6ENw6_tM7pyTg since Season Start (Apr 15)
+2026-10-11T19:50:56.639+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for uLK5HYYPm6OspqcxY5X56KEHCKP5h2UjH83OkJCP3gzJe3jdHAG5LpDb1qhGsjQil6ENw6_tM7pyTg: 1000
+2026-10-11T19:50:57.091+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 861 matches for fetching.
+2026-10-11T19:50:58.098+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:50:58.100+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=tw2b3i2kbma1mP1DSYnE2iyyGYqzWILZJBbAwYAbvWFc6-XUEy0drCASD7CP18RWRXnBAHj6_oe7Jw since Season Start (Apr 15)
+2026-10-11T19:50:58.707+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for tw2b3i2kbma1mP1DSYnE2iyyGYqzWILZJBbAwYAbvWFc6-XUEy0drCASD7CP18RWRXnBAHj6_oe7Jw: 789
+2026-10-11T19:50:59.084+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 702 matches for fetching.
+2026-10-11T19:51:00.095+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:51:00.098+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=tekdbbNvOS348kKhoBziHOuUE8aHHEylqjBSlhjCa9a0e-tcmlhvxK3_L8PciO5tohRwWIez5hB3Xw since Season Start (Apr 15)
+2026-10-11T19:51:00.858+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for tekdbbNvOS348kKhoBziHOuUE8aHHEylqjBSlhjCa9a0e-tcmlhvxK3_L8PciO5tohRwWIez5hB3Xw: 1000
+2026-10-11T19:51:01.331+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 899 matches for fetching.
+2026-10-11T19:51:02.339+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:51:02.341+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=tHd26UpNqZaiAu9qiT7CLdnJ8WdSaex4OnYUXyevkxlHFzhnnE74Klp2b2AOCgPS0dnlYalES6C5gw since Season Start (Apr 15)
+2026-10-11T19:51:02.756+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for tHd26UpNqZaiAu9qiT7CLdnJ8WdSaex4OnYUXyevkxlHFzhnnE74Klp2b2AOCgPS0dnlYalES6C5gw: 589
+2026-10-11T19:51:03.039+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 531 matches for fetching.
+2026-10-11T19:51:04.048+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:51:04.050+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=tGjz1ZB62tJaQOvZSJu3El0Gz4wATT50ZZb-LNDgChSL-VV7A45ZNZnbamdgcE2oYRXfgcLHpseUWA since Season Start (Apr 15)
+2026-10-11T19:51:04.806+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for tGjz1ZB62tJaQOvZSJu3El0Gz4wATT50ZZb-LNDgChSL-VV7A45ZNZnbamdgcE2oYRXfgcLHpseUWA: 1000
+2026-10-11T19:51:05.311+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 953 matches for fetching.
+2026-10-11T19:51:06.320+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:51:06.323+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=tBOuktqnGDE4GMk46xBL82lZYTHuX0h2YHt2MgB8o0oPoASctfHBnoGaalw3Littk-JddvAWF6j7fA since Season Start (Apr 15)
+2026-10-11T19:51:06.591+09:00  WARN 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Rate limit exceeded. Waiting based on Retry-After header...
+2026-10-11T19:52:48.616+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:52:48.619+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=tBOuktqnGDE4GMk46xBL82lZYTHuX0h2YHt2MgB8o0oPoASctfHBnoGaalw3Littk-JddvAWF6j7fA since Season Start (Apr 15)
+2026-10-11T19:52:49.168+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for tBOuktqnGDE4GMk46xBL82lZYTHuX0h2YHt2MgB8o0oPoASctfHBnoGaalw3Littk-JddvAWF6j7fA: 617
+2026-10-11T19:52:49.497+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 610 matches for fetching.
+2026-10-11T19:52:50.504+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:52:50.506+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=t9Ocj-BMSuYZkBmazn113obHNw-xGim7NkCSYO6-o0K8JNJ-s42DrcPDZxoSTZHMzr06XIZqO87pqg since Season Start (Apr 15)
+2026-10-11T19:52:50.706+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for t9Ocj-BMSuYZkBmazn113obHNw-xGim7NkCSYO6-o0K8JNJ-s42DrcPDZxoSTZHMzr06XIZqO87pqg: 291
+2026-10-11T19:52:50.834+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 237 matches for fetching.
+2026-10-11T19:52:51.849+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:52:51.851+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=t4w1yfFl1g_glyH4xauMlh8AIv1HL0DR2jX6syC1GGrAQisVChJI05uyjaLJA8XMIytEnT3tySd2xQ since Season Start (Apr 15)
+2026-10-11T19:52:52.637+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for t4w1yfFl1g_glyH4xauMlh8AIv1HL0DR2jX6syC1GGrAQisVChJI05uyjaLJA8XMIytEnT3tySd2xQ: 1000
+2026-10-11T19:52:53.125+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 938 matches for fetching.
+2026-10-11T19:52:54.139+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:52:54.142+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=sf7npW7_WlBX93R0_XxQTgfuQ4Q2privdMoZLpkPPbvj-kAa9GcixCs-kJEAGn76EIYlxC9O5i5c2g since Season Start (Apr 15)
+2026-10-11T19:52:54.896+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for sf7npW7_WlBX93R0_XxQTgfuQ4Q2privdMoZLpkPPbvj-kAa9GcixCs-kJEAGn76EIYlxC9O5i5c2g: 1000
+2026-10-11T19:52:55.387+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 927 matches for fetching.
+2026-10-11T19:52:56.390+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:52:56.392+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=sMo3A12GU5wz95yizpHUU2x6pH2qru6msXzHiz8z7HLEGcO_DRB3AeOanea6QP_2W-B1vPv3Ts3FuQ since Season Start (Apr 15)
+2026-10-11T19:52:56.708+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for sMo3A12GU5wz95yizpHUU2x6pH2qru6msXzHiz8z7HLEGcO_DRB3AeOanea6QP_2W-B1vPv3Ts3FuQ: 457
+2026-10-11T19:52:56.924+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 401 matches for fetching.
+2026-10-11T19:52:57.926+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:52:57.929+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=sGSinuSEaKjKQZBsK0tuyGC0YMIXz153LPxh4X2rnLUJjIjCQMsWL0B-ftMJFdmA_juilEw6TJEDYg since Season Start (Apr 15)
+2026-10-11T19:52:58.221+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for sGSinuSEaKjKQZBsK0tuyGC0YMIXz153LPxh4X2rnLUJjIjCQMsWL0B-ftMJFdmA_juilEw6TJEDYg: 351
+2026-10-11T19:52:58.399+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 329 matches for fetching.
+2026-10-11T19:52:59.414+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:52:59.417+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=rzLz9oUgwWnuxYVVMWWnRRaJ8PXaj8NHqbFJELuEp6dqA2TUGPhZSLyhq-ggNIdfmNK1ckUUw-A7nw since Season Start (Apr 15)
+2026-10-11T19:53:00.168+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for rzLz9oUgwWnuxYVVMWWnRRaJ8PXaj8NHqbFJELuEp6dqA2TUGPhZSLyhq-ggNIdfmNK1ckUUw-A7nw: 1000
+2026-10-11T19:53:00.666+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 930 matches for fetching.
+2026-10-11T19:53:01.679+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:53:01.681+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=rxsENE7QiWjJlQ4aL_TKe9POpabiCWb63FtgI_Qhyw1Z9o99RENNRxBIlRTsufqh8DpaWrFGveXJQg since Season Start (Apr 15)
+2026-10-11T19:53:01.883+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for rxsENE7QiWjJlQ4aL_TKe9POpabiCWb63FtgI_Qhyw1Z9o99RENNRxBIlRTsufqh8DpaWrFGveXJQg: 295
+2026-10-11T19:53:02.004+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 222 matches for fetching.
+2026-10-11T19:53:03.014+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:53:03.016+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=rpChEk3F9XTV3tlSbmt5XHzAoDMoHNByood_HttDTCcmHhCmwy_SXVRBxny0O9_PaNUIVkQFHV_F8g since Season Start (Apr 15)
+2026-10-11T19:53:03.768+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for rpChEk3F9XTV3tlSbmt5XHzAoDMoHNByood_HttDTCcmHhCmwy_SXVRBxny0O9_PaNUIVkQFHV_F8g: 981
+2026-10-11T19:53:04.263+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 916 matches for fetching.
+2026-10-11T19:53:05.280+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:53:05.283+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=rosmNJBBGKxRFPov-PbocLeB6B6GhpghM9Nm2UxQMY_K8gtWP5Nnr0p0jC2QWZhadivjnsPCLYtxeQ since Season Start (Apr 15)
+2026-10-11T19:53:05.982+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for rosmNJBBGKxRFPov-PbocLeB6B6GhpghM9Nm2UxQMY_K8gtWP5Nnr0p0jC2QWZhadivjnsPCLYtxeQ: 1000
+2026-10-11T19:53:06.443+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 863 matches for fetching.
+2026-10-11T19:53:07.452+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:53:07.455+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=rjbPb0JhRIUTglwN6C8b9r0IlBXU5hGgcSRqhWpzI5z0dOIXa63VyuEN9XlBA8FIGgSayCY_JYZbFw since Season Start (Apr 15)
+2026-10-11T19:53:08.067+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for rjbPb0JhRIUTglwN6C8b9r0IlBXU5hGgcSRqhWpzI5z0dOIXa63VyuEN9XlBA8FIGgSayCY_JYZbFw: 846
+2026-10-11T19:53:08.503+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 818 matches for fetching.
+2026-10-11T19:53:09.510+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:53:09.512+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=rg8Z9HbFbBBH3FnktC9bcaoA6mxFP4viftLf_8mctPAyR17Yf-QtaArtpsDLS_adgHOhpIxn5kFceA since Season Start (Apr 15)
+2026-10-11T19:53:10.080+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for rg8Z9HbFbBBH3FnktC9bcaoA6mxFP4viftLf_8mctPAyR17Yf-QtaArtpsDLS_adgHOhpIxn5kFceA: 700
+2026-10-11T19:53:10.446+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 682 matches for fetching.
+2026-10-11T19:53:11.448+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:53:11.451+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=r2Q6_AwzsbtJU500HsY3WnBg5dhM6M9DYGibD-pCkdnjLF7PKahobGFUSQW-sxX6r3Vw_5aPp71Q2Q since Season Start (Apr 15)
+2026-10-11T19:53:11.831+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Total matches found for r2Q6_AwzsbtJU500HsY3WnBg5dhM6M9DYGibD-pCkdnjLF7PKahobGFUSQW-sxX6r3Vw_5aPp71Q2Q: 505
+2026-10-11T19:53:12.055+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Queued 406 matches for fetching.
+2026-10-11T19:53:13.061+09:00  INFO 10504 --- [batch] [   scheduling-1] c.t.batch.scheduler.MatchFetchScheduler  : match fetch scheduler start
+2026-10-11T19:53:13.064+09:00  INFO 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Fetching ALL match IDs for PUUID=r-nmo2axi-xIxWwnpLfJ8RYiungWoePCTBRxdBbTkAeXamIBBQZLpP6z37htwaScHNUnUKcA6rlDUQ since Season Start (Apr 15)
+2026-10-11T19:53:13.209+09:00  WARN 10504 --- [batch] [   scheduling-1] c.tft.batch.service.MatchFetchService    : Rate limit exceeded. Waiting based on Retry-After header...

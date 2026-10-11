@@ -1,0 +1,15 @@
+# 인덱스 사용 - 코드 24a7c63, 2026-10-11 21:50:07
+## 통계 쿼리 실행 계획
++----+-------------+-------------+------------+--------+---------------------------------------------------+-----------------------+---------+--------------------+--------+----------+-------------+
+| id | select_type | table       | partitions | type   | possible_keys                                     | key                   | key_len | ref                | rows   | filtered | Extra       |
++----+-------------+-------------+------------+--------+---------------------------------------------------+-----------------------+---------+--------------------+--------+----------+-------------+
+|  1 | PRIMARY     | p           | NULL       | ref    | FK5wprycoh1lwf2p2kak9jvsrdm,idx_participant_puuid | idx_participant_puuid | 1022    | const              |   1000 |   100.00 | Using where |
+|  1 | PRIMARY     | g           | NULL       | eq_ref | PRIMARY                                           | PRIMARY               | 4       | tft_db.p.pa_ga_num |      1 |    10.00 | Using where |
+|  2 | SUBQUERY    | <derived3>  | NULL       | system | NULL                                              | NULL                  | NULL    | NULL               |      1 |   100.00 | NULL        |
+|  3 | DERIVED     | participant | NULL       | index  | idx_participant_puuid                             | idx_participant_puuid | 1022    | NULL               | 129123 |   100.00 | Using index |
++----+-------------+-------------+------------+--------+---------------------------------------------------+-----------------------+---------+--------------------+--------+----------+-------------+
+## 전적 페이지 측정
+BENCH puuid=EIfGM1YQ matches=1000 status=200 htmlBytes=1356797 sql=12 entitiesLoaded=3627 medianMs=147 minMs=117 maxMs=265
+BENCH puuid=sRlWp6ST matches=541 status=200 htmlBytes=1366738 sql=12 entitiesLoaded=3552 medianMs=127 minMs=109 maxMs=162
+BENCH puuid=MijD3D9h matches=316 status=200 htmlBytes=1000245 sql=11 entitiesLoaded=2655 medianMs=91 minMs=84 maxMs=110
+BENCH puuid=1yK3tEuo matches=100 status=200 htmlBytes=1259076 sql=12 entitiesLoaded=3583 medianMs=121 minMs=98 maxMs=141

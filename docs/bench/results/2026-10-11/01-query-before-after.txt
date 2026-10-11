@@ -1,0 +1,25 @@
+# commit f46b103 (변경 전)
+BENCH puuid=EIfGM1YQ matches=1000 ranked=360 status=200 htmlBytes=4348951 sql=1349 entitiesLoaded=5587 collectionsFetched=340 medianMs=957 minMs=925 maxMs=1016 all=[1016, 985, 956, 947, 961, 925, 932, 945, 957, 968, 951, 987, 990, 987, 937]
+BENCH puuid=sRlWp6ST matches=541 ranked=475 status=200 htmlBytes=4279490 sql=890 entitiesLoaded=4594 collectionsFetched=340 medianMs=671 minMs=644 maxMs=728 all=[728, 656, 697, 644, 657, 702, 703, 677, 654, 675, 660, 676, 665, 671, 652]
+BENCH puuid=MijD3D9h matches=316 ranked=15 status=200 htmlBytes=4125411 sql=701 entitiesLoaded=4392 collectionsFetched=370 medianMs=592 minMs=568 maxMs=691 all=[691, 597, 611, 592, 588, 664, 625, 568, 573, 607, 621, 584, 590, 590, 586]
+BENCH puuid=1yK3tEuo matches=100 ranked=99 status=200 htmlBytes=4261649 sql=449 entitiesLoaded=3743 collectionsFetched=340 medianMs=419 minMs=400 maxMs=491 all=[400, 404, 434, 427, 458, 491, 458, 439, 409, 414, 420, 419, 417, 411, 413]
+BENCH puuid=33h02H5F matches=100 ranked=86 status=200 htmlBytes=4093676 sql=449 entitiesLoaded=3600 collectionsFetched=340 medianMs=493 minMs=416 maxMs=766 all=[416, 455, 443, 466, 487, 492, 766, 543, 532, 516, 707, 493, 442, 513, 689]
+
+# commit 759ac7d (쿼리 개선)
+BENCH puuid=EIfGM1YQ matches=1000 ranked=360 status=200 htmlBytes=4446042 sql=12 entitiesLoaded=3627 collectionsFetched=6 medianMs=375 minMs=344 maxMs=769 all=[769, 485, 407, 359, 363, 348, 354, 348, 344, 375, 360, 521, 470, 455, 589]
+BENCH puuid=sRlWp6ST matches=541 ranked=475 status=200 htmlBytes=4375218 sql=12 entitiesLoaded=3552 collectionsFetched=6 medianMs=336 minMs=317 maxMs=409 all=[395, 409, 401, 334, 332, 330, 337, 333, 317, 346, 328, 351, 328, 336, 337]
+BENCH puuid=MijD3D9h matches=316 ranked=15 status=200 htmlBytes=3261521 sql=11 entitiesLoaded=2655 collectionsFetched=6 medianMs=286 minMs=278 maxMs=324 all=[307, 317, 286, 314, 287, 280, 284, 286, 278, 281, 283, 324, 319, 293, 286]
+BENCH puuid=1yK3tEuo matches=100 ranked=99 status=200 htmlBytes=4357370 sql=12 entitiesLoaded=3583 collectionsFetched=6 medianMs=302 minMs=295 maxMs=377 all=[349, 320, 331, 345, 301, 302, 313, 295, 299, 377, 298, 297, 301, 305, 297]
+BENCH puuid=33h02H5F matches=100 ranked=86 status=200 htmlBytes=4186045 sql=12 entitiesLoaded=3440 collectionsFetched=6 medianMs=252 minMs=243 maxMs=372 all=[245, 246, 247, 265, 246, 372, 277, 324, 256, 259, 265, 244, 252, 245, 243]
+
+# 같은 스크립트(run-bench.sh)로 재실행한 결과
+=== f46b103 측정 중 (첫 실행은 빌드 때문에 1~2분 걸립니다)
+BENCH puuid=EIfGM1YQ matches=1000 ranked=360 status=200 htmlBytes=4348951 sql=1349 entitiesLoaded=5587 collectionsFetched=340 medianMs=958 minMs=937 maxMs=1014
+BENCH puuid=sRlWp6ST matches=541 ranked=475 status=200 htmlBytes=4279490 sql=890 entitiesLoaded=4594 collectionsFetched=340 medianMs=670 minMs=659 maxMs=700
+BENCH puuid=MijD3D9h matches=316 ranked=15 status=200 htmlBytes=4125411 sql=701 entitiesLoaded=4392 collectionsFetched=370 medianMs=604 minMs=578 maxMs=625
+BENCH puuid=1yK3tEuo matches=100 ranked=99 status=200 htmlBytes=4261649 sql=449 entitiesLoaded=3743 collectionsFetched=340 medianMs=415 minMs=396 maxMs=446
+=== 759ac7d 측정 중 (첫 실행은 빌드 때문에 1~2분 걸립니다)
+BENCH puuid=EIfGM1YQ matches=1000 ranked=360 status=200 htmlBytes=4446042 sql=12 entitiesLoaded=3627 collectionsFetched=6 medianMs=347 minMs=329 maxMs=363
+BENCH puuid=sRlWp6ST matches=541 ranked=475 status=200 htmlBytes=4375218 sql=12 entitiesLoaded=3552 collectionsFetched=6 medianMs=336 minMs=322 maxMs=371
+BENCH puuid=MijD3D9h matches=316 ranked=15 status=200 htmlBytes=3261521 sql=11 entitiesLoaded=2655 collectionsFetched=6 medianMs=284 minMs=274 maxMs=322
+BENCH puuid=1yK3tEuo matches=100 ranked=99 status=200 htmlBytes=4357370 sql=12 entitiesLoaded=3583 collectionsFetched=6 medianMs=300 minMs=289 maxMs=318
