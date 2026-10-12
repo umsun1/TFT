@@ -1,0 +1,13 @@
+batch started: 0
+=== 가짜 Riot 서버가 받은 요청 (도착 시각 기준)
+{"total": 285, "byClient": {"172.31.250.4": 285}, "max1s": 15, "max120s": 95, "max120sByClient": {"172.31.250.4": 95}, "spanSec": 250.0, "lastArrivalAgoSec": 53.1}
+=== 호출 주체 IP
+error: no such object: tftv_batch
+web=172.31.250.4 batch=
+=== Web 검색 결과 (총 1252건)
+     95 200
+    929 302
+=== Redis 호출 기록(최근 2분): 95
+=== Batch 로그
+소환사 작업 완료: 0  한도 소진으로 미룸: 0  429: 0  오류: 0
+=== Web 로그: 429 0건, ERROR 0건

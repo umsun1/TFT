@@ -1,0 +1,25 @@
+## 1. 정상 검색
+status: 200 http://localhost:8092/summoner/kr/The%20Deft/KR1
+Riot 호출 기록: 3 -> 4
+티어 표시: text-blue-400 font-bold mt-1">GRANDMASTER 404 LP|
+전적 카드 수: 20
+## 2. 다시 검색(캐시)
+status: 200 http://localhost:8092/summoner/kr/The%20Deft/KR1
+Riot 호출 기록: 4 -> 4
+## 3. 429 차단 중 + 리그 캐시 없음 (아는 소환사)
+status: 200 http://localhost:8092/summoner/kr/The%20Deft/KR1
+Riot 호출 기록: 4 -> 4
+티어 표시: 티어 확인 불가|티어 확인 불가|요청이 많아 티어 정보를 불러오지 못했습니다. 전적과 통계는 저장된 데이터입니다.|
+UNRANKED 문자열 수: 0
+전적 카드 수: 20
+평균 등수 표시: 평균 등수 
+## 4. 차단 중 처음 보는 소환사
+status(쿠키 없는 첫 요청): 200 http://localhost:8092/
+Riot 호출 기록: 4 -> 4
+안내: 현재 요청이 많아 소환사 정보를 조회할 수 없습니다. 약 45초 후 다시 검색해주세요.
+## 5. 차단 중 매치 상세(DB에 있는 매치)
+match=KR_8397317578 status: 200  크기: 391117
+## 6. 차단 중 매치 상세(DB에 없는 매치)
+status: 503
+Riot 호출 기록: 4 -> 4
+## 로그의 429·차단 경고: 0건

@@ -1,0 +1,4 @@
+RESULT perSecond=18 latencyMs=0 seconds=250 env=18 mock=total=240 max1s=16 max120s=82 span=248.0 summonerDone=15 requeuedOnBudget=3 http429=0 errors=0
+RESULT perSecond=10 latencyMs=0 seconds=250 env=10 mock=total=224 max1s=10 max120s=82 span=250.8 summonerDone=14 requeuedOnBudget=2 http429=0 errors=0
+RESULT perSecond=18 latencyMs=150 seconds=250 env=18 mock=total=217 max1s=11 max120s=81 span=251.3 summonerDone=13 requeuedOnBudget=1 http429=0 errors=0
+RESULT perSecond=10 latencyMs=150 seconds=250 env=10 mock=total=219 max1s=11 max120s=82 span=251.6 summonerDone=13 requeuedOnBudget=1 http429=0 errors=0

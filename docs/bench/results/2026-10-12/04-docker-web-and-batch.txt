@@ -1,0 +1,11 @@
+batch started: 1
+=== 가짜 Riot 서버가 받은 요청 (도착 시각 기준)
+{"total": 285, "byClient": {"172.31.250.5": 76, "172.31.250.4": 209}, "max1s": 15, "max120s": 96, "max120sByClient": {"172.31.250.5": 47, "172.31.250.4": 83}, "spanSec": 255.4, "lastArrivalAgoSec": 48.5}
+=== 호출 주체 IP
+web=172.31.250.4 batch=172.31.250.5
+=== Web 검색 결과 (총 1252건)
+cat: 'C:/Users/user/AppData/Local/Temp/claude/C--Users-user-Desktop-dev/8ae657ce-8c3b-4b35-899e-969d6e3d3932/scratchpad/verify/codes/*.txt': No such file or directory
+=== Redis 호출 기록(최근 2분): 95
+=== Batch 로그
+소환사 작업 완료: 16  한도 소진으로 미룸: 0  429: 0  오류: 0
+=== Web 로그: 429 0건, ERROR 0건

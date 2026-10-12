@@ -1,0 +1,59 @@
+# 검증 전용 덮어쓰기. 프로젝트의 docker-compose.yml을 그대로 쓰되,
+# 운영용 컨테이너(tft_mysql, tft_redis)와 겹치지 않게 이름·포트·볼륨을 분리하고
+# Riot API 호스트를 가짜 서버로 돌린다. 실제 Riot으로는 요청이 나가지 않는다.
+services:
+  db:
+    container_name: tftv_mysql
+    ports: !override
+      - "13307:3306"
+  redis:
+    container_name: tftv_redis
+    ports: !override
+      - "16379:6379"
+  mock-riot:
+    image: python:3.12-alpine
+    container_name: tftv_mock
+    command: ["python", "/mock/mock_riot.py"]
+    volumes:
+      - ${VERIFY_DIR}:/mock:ro
+      - ${VERIFY_DIR}/certs:/certs:ro
+    networks:
+      default:
+        ipv4_address: 172.31.250.10
+  web:
+    container_name: tftv_web
+    ports: !override
+      - "18080:8080"
+    restart: "no"
+    depends_on:
+      mock-riot:
+        condition: service_started
+    extra_hosts:
+      - "kr.api.riotgames.com:172.31.250.10"
+      - "asia.api.riotgames.com:172.31.250.10"
+    volumes:
+      - ${VERIFY_DIR}/certs:/certs:ro
+    environment:
+      - RIOT_API_KEY=mock-key
+      - JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit
+  batch:
+    container_name: tftv_batch
+    restart: "no"
+    depends_on:
+      mock-riot:
+        condition: service_started
+    extra_hosts:
+      - "kr.api.riotgames.com:172.31.250.10"
+      - "asia.api.riotgames.com:172.31.250.10"
+    volumes:
+      - ${VERIFY_DIR}/certs:/certs:ro
+    environment:
+      - RIOT_API_KEY=mock-key
+      - JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit
+      - RIOT_RATE_LIMIT_BATCH_PER_SECOND=${BATCH_PER_SECOND:-10}
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.31.250.0/24

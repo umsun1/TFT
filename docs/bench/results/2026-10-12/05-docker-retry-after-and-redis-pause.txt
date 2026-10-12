@@ -1,0 +1,18 @@
+##### 1. Retry-After 차단 공유
+429 직후: 가짜 서버 수신 4건, 차단 키 TTL 17197ms
+차단 중 Web 검색: 200 0.019095s  안내: 현재 요청이 많아 소환사 정보를 조회할 수 없습니다. 약 17초 후 다시 검색해주세요.
+차단 중 Web 검색: 200 0.009331s  안내: 현재 요청이 많아 소환사 정보를 조회할 수 없습니다. 약 5초 후 다시 검색해주세요.
+차단 16초 동안 가짜 서버가 받은 요청: 0건  (Batch는 계속 실행 중, 대기열 9005건)
+차단 해제 후 5초 내 받은 요청: 15건, 차단 키 TTL -2
+Batch 로그의 429 기록: 2026-10-12T00:49:03-3] c.t.b.r.RiotRateLimitInterceptor         : Rate limit exceeded (type=application). Blocking Riot 
+
+##### 2. Redis가 응답하지 않을 때 (docker pause)
+Redis 멈춤 상태에서 Web 검색 1: 200 2.012556s  안내: 일시적인 문제로 소환사 정보를 조회할 수 없습니다. 잠시 후 다시 검색해주세요.
+Redis 멈춤 상태에서 Web 검색 2: 200 2.008337s  안내: 일시적인 문제로 소환사 정보를 조회할 수 없습니다. 잠시 후 다시 검색해주세요.
+메인 페이지: 200 0.004685s
+Redis 멈춤 12초 동안 가짜 서버가 받은 요청: 3건
+Redis 복구 후 Web 검색: 200 0.118001s  안내: 
+복구 후 가짜 서버가 받은 요청: 27건
+Web 컨테이너의 Redis 타임아웃 설정: SPRING_DATA_REDIS_CONNECT_TIMEOUT=1s SPRING_DATA_REDIS_TIMEOUT=1s SPRING_DATA_REDIS_HOST=redis SPRING_DATA_REDIS_PORT=6379 
+Batch 컨테이너의 Redis 타임아웃 설정: SPRING_DATA_REDIS_HOST=redis SPRING_DATA_REDIS_PORT=6379 
+Web 로그의 Redis 타임아웃 메시지: 

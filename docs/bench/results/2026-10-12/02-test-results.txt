@@ -1,0 +1,17 @@
+# 2026-10-12 최종 (대상 테스트만 실행, -Dtest=...)
+## web
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.076 s -- in com.tft.web.config.RedisTimeoutConfigTest
+Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.932 s -- in com.tft.web.ratelimit.RiotRateLimiterTest
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.088 s -- in com.tft.web.ratelimit.RiotRateLimitInterceptorTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.648 s -- in com.tft.web.ratelimit.RiotCallPathTest
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.163 s -- in com.tft.web.service.SummonerServiceImpTest
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.221 s -- in com.tft.web.controller.MainControllerTest
+## batch
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.064 s -- in com.tft.batch.config.RedisTimeoutConfigTest
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.606 s -- in com.tft.batch.ratelimit.RiotRateLimiterTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in com.tft.batch.ratelimit.RiotRateLimitInterceptorTest
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.875 s -- in com.tft.batch.service.MatchFetchServiceTest
+
+## 실행하지 않은 테스트
+JpaMappingTest, WebApplicationTests, BatchApplicationTests: 실제 DB에 연결되는 컨텍스트 테스트. 수집 DB를 건드릴 수 있어 실행하지 않았다.
+이 PC에서는 작업 전에도 DB 접속 실패로 통과하지 못하던 테스트다.

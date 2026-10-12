@@ -81,6 +81,9 @@ public class JpaMappingTest {
     //     System.out.println("===============================");
     // }
 
+    // 연결된 DB의 매치 데이터를 전부 지운다. 수집 DB에 연결된 채 실행되면 복구할 수 없으므로 꺼 둔다.
+    // 테스트 전용 DB를 갖춘 뒤에만 다시 켤 것.
+    @org.junit.jupiter.api.Disabled("수집 DB의 데이터를 전부 삭제함. 테스트 전용 DB에서만 실행할 것")
     @Test
     void 데이터_전체_삭제() {
         gameInfoRepository.deleteAll(); // 모든 게임 정보와 그에 속한 자식들까지 한 번에 삭제
