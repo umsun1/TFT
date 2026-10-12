@@ -21,7 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RiotRateLimitInterceptor implements ClientHttpRequestInterceptor {
 
-    private static final long DEFAULT_RETRY_AFTER_SEC = 10;
+    static final long DEFAULT_RETRY_AFTER_SEC = 10;          // 헤더가 없을 때
+    static final long UNUSABLE_RETRY_AFTER_SEC = 60;         // 헤더가 있지만 해석할 수 없을 때
+    static final long LONGEST_DOCUMENTED_WINDOW_SEC = 600;   // 프로덕션 키의 10분 구간
+    static final long MAX_RETRY_AFTER_SEC = 86_400;          // 헤더 오류에 대한 안전장치(하루)
 
     private final RiotRateLimiter rateLimiter;
 
@@ -37,18 +40,53 @@ public class RiotRateLimitInterceptor implements ClientHttpRequestInterceptor {
 
         ClientHttpResponse response = execution.execute(request, body);
         if (response.getStatusCode().value() == 429) {
-            long retryAfter = parseRetryAfter(response.getHeaders().getFirst("Retry-After"));
-            log.warn("Rate limit exceeded. Blocking Riot calls for {}s", retryAfter);
+            long retryAfter = parseRetryAfterSeconds(response.getHeaders().getFirst("Retry-After"));
+            log.warn("Rate limit exceeded (type={}). Blocking Riot calls for {}s",
+                    response.getHeaders().getFirst("X-Rate-Limit-Type"), retryAfter);
             rateLimiter.blockFor(Duration.ofSeconds(retryAfter + 1));
         }
         return response;
     }
 
-    private long parseRetryAfter(String header) {
-        try {
-            return header != null ? Long.parseLong(header.trim()) : DEFAULT_RETRY_AFTER_SEC;
-        } catch (NumberFormatException e) {
+    /**
+     * Retry-After를 초 단위로 읽는다. Riot 문서: "Retry-After가 가리키는 시간 동안 호출을 멈춰야 한다."
+     *
+     * - 양의 정수: 그대로 따른다(줄이지 않는다). 문서상 가장 긴 구간(600초)을 넘으면 오류 로그를 남긴다.
+     * - HTTP 날짜 형식: 그 시각까지 남은 초.
+     * - 0: 최소 1초.
+     * - 헤더 없음: 하위 서비스 한도일 때 생기며 대기 시간 규정이 없다. 기본 10초.
+     * - 음수, 숫자·날짜가 아닌 값, 지난 날짜: 얼마나 기다려야 하는지 알 수 없으므로 더 길게(60초) 멈춘다.
+     * - 하루를 넘는 값: 정상적인 한도 구간으로 볼 수 없어 하루만 차단하고 오류 로그를 남긴다.
+     *   (값을 그대로 따르면 잘못된 헤더 하나로 서비스가 무기한 멈추므로 둔 유일한 상한이다.)
+     */
+    static long parseRetryAfterSeconds(String header) {
+        if (header == null) {
             return DEFAULT_RETRY_AFTER_SEC;
         }
+        String value = header.trim();
+        Long seconds = null;
+        try {
+            seconds = Long.parseLong(value);
+        } catch (NumberFormatException notANumber) {
+            try {
+                java.time.ZonedDateTime until = java.time.ZonedDateTime.parse(value,
+                        java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME);
+                seconds = java.time.Duration.between(java.time.ZonedDateTime.now(until.getZone()), until).getSeconds();
+            } catch (java.time.format.DateTimeParseException notADate) {
+                // 아래에서 처리
+            }
+        }
+        if (seconds == null || seconds < 0) {
+            log.warn("Unusable Retry-After header '{}'. Blocking for {}s", header, UNUSABLE_RETRY_AFTER_SEC);
+            return UNUSABLE_RETRY_AFTER_SEC;
+        }
+        if (seconds > MAX_RETRY_AFTER_SEC) {
+            log.error("Retry-After {}s exceeds one day. Capping at {}s", seconds, MAX_RETRY_AFTER_SEC);
+            return MAX_RETRY_AFTER_SEC;
+        }
+        if (seconds > LONGEST_DOCUMENTED_WINDOW_SEC) {
+            log.error("Retry-After {}s is longer than any documented rate limit window. Riot calls stay blocked.", seconds);
+        }
+        return Math.max(1, seconds);
     }
 }

@@ -138,6 +138,9 @@ public class MatchServiceImp implements MatchService {
             // 화면용 데이터로 가공 후 반환
             return processDtoForView(metadata, info, myPuuid);
 
+        } catch (com.tft.web.ratelimit.RiotRateLimitedException e) {
+            // 호출 제한으로 조회하지 못한 것은 "없는 매치"가 아니다
+            throw e;
         } catch (Exception e) {
             System.err.println("매치 상세 조회 실패: " + matchId);
             e.printStackTrace();

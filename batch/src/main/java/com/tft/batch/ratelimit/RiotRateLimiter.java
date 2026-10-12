@@ -16,6 +16,9 @@ import org.springframework.stereotype.Component;
  * 호출 시각을 Redis ZSet에 기록해 "최근 2분", "최근 1초" 구간의 호출 수를 센다(슬라이딩 윈도우).
  * Web 서버도 같은 키에 자신의 호출을 기록하므로, Batch는 Web이 쓴 만큼 덜 쓴다.
  * 429를 받으면 Retry-After 동안 차단 키를 걸어 그 시간에는 아무도 호출하지 않는다.
+ *
+ * web 모듈의 RiotRateLimiter가 같은 키와 같은 스크립트를 쓴다(공통 모듈이 없어 복사해 둠).
+ * 키 이름이나 스크립트를 바꿀 때는 web 쪽도 똑같이 바꿔야 한다.
  */
 @Component
 public class RiotRateLimiter {
@@ -25,7 +28,7 @@ public class RiotRateLimiter {
 
     // 반환값: 0이면 통과, 양수면 그만큼(ms) 기다려야 함
     // 시각은 Redis TIME을 써서 Web/Batch 서버의 시계 차이와 무관하게 한다
-    private static final String SCRIPT = """
+    static final String ACQUIRE_SCRIPT = """
             local blocked = redis.call('PTTL', KEYS[2])
             if blocked > 0 then return blocked end
 
@@ -52,8 +55,20 @@ public class RiotRateLimiter {
             return 0
             """;
 
+    // 차단 시간은 늘어나는 방향으로만 바꾼다. 긴 차단이 걸려 있는데 짧은 값이 뒤늦게 와도 줄어들지 않는다.
+    static final String BLOCK_SCRIPT = """
+            local ttl = redis.call('PTTL', KEYS[1])
+            local want = tonumber(ARGV[1])
+            if ttl < want then
+              redis.call('SET', KEYS[1], '1', 'PX', want)
+              return want
+            end
+            return ttl
+            """;
+
     private final StringRedisTemplate redis;
-    private final DefaultRedisScript<Long> script = new DefaultRedisScript<>(SCRIPT, Long.class);
+    private final DefaultRedisScript<Long> script = new DefaultRedisScript<>(ACQUIRE_SCRIPT, Long.class);
+    private final DefaultRedisScript<Long> blockScript = new DefaultRedisScript<>(BLOCK_SCRIPT, Long.class);
     private final List<String> keys;
     private final long longWindowMs;
     private final int longLimit;
@@ -66,7 +81,7 @@ public class RiotRateLimiter {
     @Autowired
     public RiotRateLimiter(StringRedisTemplate redis,
             @Value("${riot.rate-limit.batch-per-two-minutes:80}") int longLimit,
-            @Value("${riot.rate-limit.per-second:18}") int shortLimit,
+            @Value("${riot.rate-limit.batch-per-second:10}") int shortLimit,
             @Value("${riot.rate-limit.max-wait-ms:3000}") long maxWaitMs) {
         this(redis, "", 120_000, longLimit, 1_000, shortLimit, maxWaitMs);
     }
@@ -130,9 +145,12 @@ public class RiotRateLimiter {
         }
     }
 
-    /** 429를 받았을 때: 주어진 시간 동안 Web/Batch 모두 호출하지 않도록 차단한다. */
+    /**
+     * 429를 받았을 때: 주어진 시간 동안 Web/Batch 모두 호출하지 않도록 차단한다.
+     * 이미 더 긴 차단이 걸려 있으면 그대로 둔다.
+     */
     public void blockFor(Duration duration) {
-        redis.opsForValue().set(keys.get(1), "1", duration);
+        redis.execute(blockScript, List.of(keys.get(1)), String.valueOf(duration.toMillis()));
     }
 
     private long run(boolean record) {

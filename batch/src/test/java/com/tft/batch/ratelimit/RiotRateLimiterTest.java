@@ -125,6 +125,55 @@ class RiotRateLimiterTest {
     }
 
     @Test
+    void shorterBlockDoesNotShortenExistingLongerBlock() {
+        RiotRateLimiter limiter = limiter(60_000, 100, 1_000, 100);
+
+        limiter.blockFor(Duration.ofSeconds(60));
+        limiter.blockFor(Duration.ofSeconds(2));
+
+        Long ttl = redis.getExpire(prefix + RiotRateLimiter.BLOCKED_KEY, java.util.concurrent.TimeUnit.MILLISECONDS);
+        assertThat(ttl).isGreaterThan(50_000L);
+    }
+
+    @Test
+    void longerBlockExtendsExistingBlock() {
+        RiotRateLimiter limiter = limiter(60_000, 100, 1_000, 100);
+
+        limiter.blockFor(Duration.ofSeconds(2));
+        limiter.blockFor(Duration.ofSeconds(60));
+
+        Long ttl = redis.getExpire(prefix + RiotRateLimiter.BLOCKED_KEY, java.util.concurrent.TimeUnit.MILLISECONDS);
+        assertThat(ttl).isGreaterThan(50_000L);
+    }
+
+    @Test
+    void concurrentCallsNeverExceedLimit() throws Exception {
+        RiotRateLimiter limiter = limiter(60_000, 30, 1_000, 1_000);
+        int threads = 100;
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(threads);
+        java.util.concurrent.CountDownLatch go = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.atomic.AtomicInteger granted = new java.util.concurrent.atomic.AtomicInteger();
+        java.util.List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+        for (int i = 0; i < threads; i++) {
+            futures.add(pool.submit(() -> {
+                go.await();
+                if (limiter.tryAcquire() == 0) {
+                    granted.incrementAndGet();
+                }
+                return null;
+            }));
+        }
+        go.countDown();
+        for (java.util.concurrent.Future<?> f : futures) {
+            f.get(30, java.util.concurrent.TimeUnit.SECONDS);
+        }
+        pool.shutdown();
+
+        assertThat(granted.get()).isEqualTo(30);
+        assertThat(redis.opsForZSet().zCard(prefix + RiotRateLimiter.CALLS_KEY)).isEqualTo(30);
+    }
+
+    @Test
     void patientJobWaitsForBudgetInsteadOfFailing() {
         RiotRateLimiter limiter = limiter(300, 1, 100, 100);
         limiter.acquire();
