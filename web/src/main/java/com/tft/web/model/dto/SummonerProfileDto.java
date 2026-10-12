@@ -8,6 +8,17 @@ public class SummonerProfileDto {
     private String tagLine;
     private String puuid;
     
+    /**
+     * 리그(티어·LP) 조회 결과.
+     * OK: 조회 성공(랭크 있음 또는 UNRANKED) / RATE_LIMITED: 호출 제한으로 조회 못 함 / UNAVAILABLE: 그 외 오류로 조회 못 함.
+     * OK 가 아니면 tier·rank·lp·wins·losses 는 알 수 없는 값이므로 화면에 쓰지 않는다.
+     */
+    private String leagueStatus = "OK";
+
+    public boolean isLeagueAvailable() {
+        return "OK".equals(leagueStatus);
+    }
+
     private String tier;
     private String rank;
     private int lp;

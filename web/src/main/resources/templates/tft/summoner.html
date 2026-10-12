@@ -41,7 +41,7 @@
 							<!-- 티어 날개 아이콘 (정중앙 고정) -->
 							<img th:src="${profile.tierWingsUrl}"
 								class="absolute w-56 h-auto z-10 pointer-events-none max-w-none"
-								th:alt="${profile.tier}" loading="lazy"
+								th:alt="${profile.leagueAvailable} ? ${profile.tier} : '티어 확인 불가'" loading="lazy"
 								style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
 						</div>
 						<div class="text-center">
@@ -52,7 +52,10 @@
 									th:text="'#' + ${profile.tagLine}"></span>
 							</h2>
 							<!-- 티어 및 점수 (마스터 이상 숫자 제거) -->
-							<p class="text-blue-400 font-bold mt-1" th:text="${profile.tier} + 
+							<p th:if="${!profile.leagueAvailable}" class="text-gray-400 font-bold mt-1">티어 확인 불가</p>
+							<p th:if="${!profile.leagueAvailable}" class="text-[10px] text-gray-500 mt-1"
+								th:text="${profile.leagueStatus == 'RATE_LIMITED'} ? '요청이 많아 티어 정보를 불러오지 못했습니다. 전적과 통계는 저장된 데이터입니다.' : '티어 정보를 불러오지 못했습니다. 전적과 통계는 저장된 데이터입니다.'"></p>
+							<p th:if="${profile.leagueAvailable}" class="text-blue-400 font-bold mt-1" th:text="${profile.tier} + 
 						   (${profile.tier == 'MASTER' or profile.tier == 'GRANDMASTER' or profile.tier == 'CHALLENGER' ? '' : ' ' + profile.rank}) + 
 						   ' ' + ${profile.lp} + ' LP'">
 							</p>

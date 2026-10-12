@@ -47,30 +47,26 @@ public class RiotSummonerApiClient {
         return response.getBody();
     }
 
-    // PUUID -> 티어/LP (TTL 2m). 429 등으로 null 이면 캐싱하지 않음
+    // PUUID -> 티어/LP (TTL 2m)
+    // 반환값 null 은 "조회에 성공했고 랭크 기록이 없음(UNRANKED)" 한 가지만 뜻한다.
+    // 429·호출 제한·그 외 오류는 예외로 올려 보내 호출한 쪽이 UNRANKED 와 구분하게 한다. (null 은 캐싱하지 않음)
     @Cacheable(cacheNames = CacheNames.LEAGUE, key = "#puuid", unless = "#result == null")
     public TftLeagueEntryDto getTftLeagueByPuuid(String puuid) {
         String url = "https://kr.api.riotgames.com/tft/league/v1/by-puuid/" + puuid;
-        try {
-            ResponseEntity<List<TftLeagueEntryDto>> response = restTemplate.exchange(
-                    url, HttpMethod.GET, authEntity(),
-                    new ParameterizedTypeReference<List<TftLeagueEntryDto>>() {
-                    });
+        ResponseEntity<List<TftLeagueEntryDto>> response = restTemplate.exchange(
+                url, HttpMethod.GET, authEntity(),
+                new ParameterizedTypeReference<List<TftLeagueEntryDto>>() {
+                });
 
-            List<TftLeagueEntryDto> results = response.getBody();
-            if (results == null || results.isEmpty())
-                return null;
-
-            // RANKED_TFT (솔로 랭크)를 우선적으로 찾음
-            return results.stream()
-                    .filter(league -> "RANKED_TFT".equals(league.getQueueType()))
-                    .findFirst()
-                    .orElse(results.get(0)); // 솔랭이 없으면 첫 번째 정보라도 반환
-        } catch (HttpClientErrorException.TooManyRequests e) {
-            String retryAfter = e.getResponseHeaders() != null ? e.getResponseHeaders().getFirst("Retry-After") : null;
-            System.err.println("리그 정보 조회 실패(429): " + retryAfter + "초 후에 다시 시도 하시오.");
+        List<TftLeagueEntryDto> results = response.getBody();
+        if (results == null || results.isEmpty())
             return null;
-        }
+
+        // RANKED_TFT (솔로 랭크)를 우선적으로 찾음
+        return results.stream()
+                .filter(league -> "RANKED_TFT".equals(league.getQueueType()))
+                .findFirst()
+                .orElse(results.get(0)); // 솔랭이 없으면 첫 번째 정보라도 반환
     }
 
     // PUUID -> 소환사 레벨, 아이콘 (TTL 10m)

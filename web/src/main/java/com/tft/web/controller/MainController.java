@@ -57,7 +57,7 @@ public class MainController {
 		try {
 			SummonerProfileDto profile = summonerService.getSummonerData(server, gameName, tagLine, queueId);
 			if (profile == null) {
-				redirectAttributes.addFlashAttribute("errorMessage", "소환사를 찾을 수 없거나 Riot API 한도가 초과되었습니다.");
+				redirectAttributes.addFlashAttribute("errorMessage", "소환사를 찾을 수 없습니다.");
 				return "redirect:/";
 			}
 			
@@ -75,6 +75,16 @@ public class MainController {
 			model.addAttribute("totalMatches", matchPage.getTotalElements());
 
 			return "tft/summoner";
+		} catch (com.tft.web.ratelimit.RiotRateLimitedException e) {
+			// 호출 전에 막힌 경우: Riot 에 요청하지 않았다. 남은 시간을 안내한다.
+			String message = e.isLimiterUnavailable()
+					? "일시적인 문제로 소환사 정보를 조회할 수 없습니다. 잠시 후 다시 검색해주세요."
+					: "현재 요청이 많아 소환사 정보를 조회할 수 없습니다. 약 " + e.getRetryAfterSeconds() + "초 후 다시 검색해주세요.";
+			redirectAttributes.addFlashAttribute("errorMessage", message);
+			return "redirect:/";
+		} catch (org.springframework.web.client.HttpClientErrorException.NotFound e) {
+			redirectAttributes.addFlashAttribute("errorMessage", "소환사를 찾을 수 없습니다.");
+			return "redirect:/";
 		} catch (org.springframework.web.client.HttpClientErrorException.TooManyRequests e) {
 			redirectAttributes.addFlashAttribute("errorMessage", "Riot API 요청 한도가(Rate Limit) 일시적으로 초과되었습니다. 잠시 후 다시 검색해주세요.");
 			return "redirect:/";
@@ -90,7 +100,13 @@ public class MainController {
 								 @RequestParam(defaultValue = "") String puuid,
 								 @RequestParam(defaultValue = "kr") String server,
 								 Model model) {
-		MatchApiDto match = matchService.getMatchDetailById(matchId, puuid);
+		MatchApiDto match;
+		try {
+			match = matchService.getMatchDetailById(matchId, puuid);
+		} catch (com.tft.web.ratelimit.RiotRateLimitedException e) {
+			throw new org.springframework.web.server.ResponseStatusException(
+					org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, "요청이 많아 매치 정보를 불러올 수 없습니다.");
+		}
 		if (match == null) {
 			throw new org.springframework.web.server.ResponseStatusException(
 					org.springframework.http.HttpStatus.NOT_FOUND, "매치 정보를 찾을 수 없습니다: " + matchId);

@@ -22,6 +22,7 @@ import com.tft.web.model.dto.SummonerDto;
 import com.tft.web.model.dto.SummonerProfileDto;
 import com.tft.web.model.dto.SummonerStatsDto;
 import com.tft.web.model.dto.TftLeagueEntryDto;
+import com.tft.web.ratelimit.RiotRateLimitedException;
 import com.tft.web.repository.LpHistoryRepository;
 import com.tft.web.repository.ParticipantRepository;
 
@@ -61,21 +62,23 @@ public class SummonerServiceImp implements SummonerService {
         // 큐 등록 (상태 갱신만 수행, DB 쓰기 발생)
         updateFetchQueue(puuid);
 
-        TftLeagueEntryDto league;
-        SummonerDto summoner;
+        // 리그·소환사 조회는 실패해도 페이지 전체를 실패시키지 않는다(전적과 통계는 DB에 있다).
+        // 단, 400/404 는 puuid 자체가 잘못된 것이므로 기존처럼 검색을 중단한다.
+        TftLeagueEntryDto league = null;
+        String leagueStatus = "OK";
         try {
-            league = leagueFuture.join();
+            league = leagueFuture.join(); // null 이면 실제 UNRANKED
+        } catch (CompletionException e) {
+            rethrowIfInvalidPuuid(e, gameName, tagLine);
+            leagueStatus = isRateLimited(e.getCause()) ? "RATE_LIMITED" : "UNAVAILABLE";
+        }
+
+        SummonerDto summoner = null;
+        try {
             summoner = summonerFuture.join();
         } catch (CompletionException e) {
-            // 캐시된 puuid 로 조회했는데 400/404 → puuid 가 유효하지 않음(API 키 프로젝트 변경 등).
-            // 다음 검색 때 다시 조회하도록 계정 캐시를 비운다.
-            if (e.getCause() instanceof HttpClientErrorException.BadRequest
-                    || e.getCause() instanceof HttpClientErrorException.NotFound) {
-                riotApiClient.evictAccount(gameName, tagLine);
-            }
-            if (e.getCause() instanceof RuntimeException re)
-                throw re;
-            throw e;
+            rethrowIfInvalidPuuid(e, gameName, tagLine);
+            // 레벨·아이콘만 비워 둔다
         }
 
         // 4. 데이터 조립
@@ -83,30 +86,34 @@ public class SummonerServiceImp implements SummonerService {
         profile.setSummonerName(account.getGameName());
         profile.setTagLine(account.getTagLine());
         profile.setPuuid(puuid);
+        profile.setLeagueStatus(leagueStatus);
+
+        // 1. 전체 통계 계산 (DB 기반 - SQL 집계). 리그 조회 성공 여부와 무관하게 계산한다.
+        SummonerStatsDto stats = participantRepository.getSummonerStats(puuid, queueId == null ? 0 : queueId);
+
+        if (stats != null && stats.getTotalCount() != null && stats.getTotalCount() > 0) {
+            profile.setAvgPlacement(stats.getAvgPlacement());
+            profile.setWinRate((double) stats.getWinCount() / stats.getTotalCount() * 100.0);
+            profile.setTop4Rate((double) stats.getTop4Count() / stats.getTotalCount());
+            profile.setWinCount(stats.getWinCount());
+        }
+
+        // 2. 최근 20게임 상세 통계 (필요한 데이터만 조회)
+        List<Participant> recentMatches = participantRepository.findRecentMatchesByPuuid(
+                puuid,
+                queueId == null ? 0 : queueId,
+                PageRequest.of(0, 20));
+
+        if (!recentMatches.isEmpty()) {
+            calculateAchievements(profile, recentMatches);
+        }
+
+        int collectedCount = stats != null && stats.getTotalCount() != null ? stats.getTotalCount().intValue() : 0;
+        profile.setCollectedCount(collectedCount);
 
         if (league != null) {
             // LP 변화 기록 - 비동기로 처리하여 응답 속도 향상 권장되나 일단 직접 실행
             saveLpHistory(puuid, league);
-
-            // 1. 전체 통계 계산 (DB 기반 - SQL 집계)
-            SummonerStatsDto stats = participantRepository.getSummonerStats(puuid, queueId == null ? 0 : queueId);
-
-            if (stats != null && stats.getTotalCount() > 0) {
-                profile.setAvgPlacement(stats.getAvgPlacement());
-                profile.setWinRate((double) stats.getWinCount() / stats.getTotalCount() * 100.0);
-                profile.setTop4Rate((double) stats.getTop4Count() / stats.getTotalCount());
-                profile.setWinCount(stats.getWinCount());
-            }
-
-            // 2. 최근 20게임 상세 통계 (필요한 데이터만 조회)
-            List<Participant> recentMatches = participantRepository.findRecentMatchesByPuuid(
-                    puuid,
-                    queueId == null ? 0 : queueId,
-                    PageRequest.of(0, 20));
-
-            if (!recentMatches.isEmpty()) {
-                calculateAchievements(profile, recentMatches);
-            }
 
             profile.setTier(league.getTier());
             profile.setRank(league.getRank());
@@ -114,16 +121,24 @@ public class SummonerServiceImp implements SummonerService {
             profile.setWins(league.getWins());
             profile.setLosses(league.getLosses());
 
-            profile.setCollectedCount(stats != null ? stats.getTotalCount().intValue() : 0);
             profile.setTotalCount(league.getWins() + league.getLosses());
             profile.setFetching(profile.getCollectedCount() < profile.getTotalCount());
-            
+
             // 티어 날개 URL 설정
             profile.setTierWingsUrl("https://cdn.metatft.com/file/metatft/ranks/wings_" + profile.getTier().toLowerCase() + ".png");
         } else {
-            profile.setTier("UNRANKED");
+            if (profile.isLeagueAvailable()) {
+                // 조회에 성공했고 랭크 기록이 없는 경우에만 UNRANKED 로 표시한다
+                profile.setTier("UNRANKED");
+            } else {
+                // 조회하지 못한 경우: 티어를 알 수 없다. UNRANKED 로 쓰지 않는다.
+                profile.setTier(null);
+            }
             profile.setRank("");
-            // 언랭크 전용 테두리 설정
+            // 전체 판수를 알 수 없으므로 수집 진행률은 표시하지 않는다
+            profile.setTotalCount(collectedCount);
+            profile.setFetching(false);
+            // 언랭크 전용 테두리 설정 (티어를 모를 때도 중립 테두리로 사용)
             profile.setTierWingsUrl("https://cdn.metatft.com/file/metatft/borders/theme-5-border.png");
         }
 
@@ -136,6 +151,22 @@ public class SummonerServiceImp implements SummonerService {
         loadLpHistoryData(profile, puuid);
 
         return profile;
+    }
+
+    // 캐시된 puuid 로 조회했는데 400/404 → puuid 가 유효하지 않음(API 키 프로젝트 변경 등).
+    // 다음 검색 때 다시 조회하도록 계정 캐시를 비우고 검색을 중단한다.
+    private void rethrowIfInvalidPuuid(CompletionException e, String gameName, String tagLine) {
+        if (e.getCause() instanceof HttpClientErrorException.BadRequest
+                || e.getCause() instanceof HttpClientErrorException.NotFound) {
+            riotApiClient.evictAccount(gameName, tagLine);
+            throw (HttpClientErrorException) e.getCause();
+        }
+    }
+
+    // 호출 전에 제한기가 막았거나(RiotRateLimitedException), 그래도 Riot 이 429 를 돌려준 경우
+    private boolean isRateLimited(Throwable cause) {
+        return cause instanceof RiotRateLimitedException
+                || cause instanceof HttpClientErrorException.TooManyRequests;
     }
 
     private void updateFetchQueue(String puuid) {
